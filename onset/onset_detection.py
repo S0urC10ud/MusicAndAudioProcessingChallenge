@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 
 # python detector.py data/train/ data/out.json && python evaluate.py data/train/ data/out.json
 
-def spectral_difference(spect: npt.NDArray, norm_index: int = 2) -> npt.NDArray:
+def spectral_difference(spect: npt.NDArray, norm_index: int = 1) -> npt.NDArray:
     spect=spect.T
     diff = np.zeros_like(spect)
     diff[:,1:] = spect[:,1:]-spect[:,:-1]
