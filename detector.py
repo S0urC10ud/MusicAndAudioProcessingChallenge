@@ -23,6 +23,9 @@ except ImportError:
     tqdm = None
 
 
+from onset import onset_detection
+
+
 def opts_parser():
     usage =\
 """Detects onsets, beats and tempo in WAV files.
@@ -120,9 +123,12 @@ def onset_detection_function(sample_rate, signal, fps, spect, magspect,
     where the onsets are. Returns the function values and its sample/frame
     rate in values per second as a tuple: (values, values_per_second)
     """
+    return onset_detection.onset_detection_function(sample_rate, signal, fps, spect, magspect,melspect, options)
+
     # we only have a dumb dummy implementation here.
     # it returns every 1000th absolute sample value of the input signal.
     # this is not a useful solution at all, just a placeholder.
+    
     values = np.abs(signal[::1000])
     values_per_second = sample_rate / 1000
     return values, values_per_second
@@ -133,6 +139,9 @@ def detect_onsets(odf_rate, odf, options):
     Detect onsets in the onset detection function.
     Returns the positions in seconds.
     """
+
+    return onset_detection.detect_onsets(odf_rate, odf, options)
+
     # we only have a dumb dummy implementation here.
     # it returns the timestamps of the 100 strongest values.
     # this is not a useful solution at all, just a placeholder.
