@@ -3,6 +3,7 @@
 __pycache__
 
 .theia
+_*.md
 
 # VSC
 .vscode

@@ -9,6 +9,7 @@ def spectral_difference(spect: npt.NDArray, norm_index: int = 1) -> npt.NDArray:
     spect=spect.T
     diff = np.zeros_like(spect)
     diff[:,1:] = spect[:,1:]-spect[:,:-1]
+    diff[:,0] = diff[:,1]
     
     positive_diff = np.abs(np.maximum(diff, 0))
     return np.sum(positive_diff**norm_index, axis=1)**(1/norm_index)
@@ -44,6 +45,9 @@ def adaptive_thresholding(odf: npt.NDArray, adaptive_threshold_window_size:int, 
         threshold = delta + l*med
         
         onsets[i] = odf[i] > threshold and is_local_max
+
+    # no onset at very beginning 
+    onsets[:2] = False
     return onsets
 
 def detect_onsets(odf_rate: int, odf: npt.NDArray, options):
