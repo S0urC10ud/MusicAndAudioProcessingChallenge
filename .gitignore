@@ -1,0 +1,26 @@
+/data/*
+!/data/.gitkeep
+__pycache__
+
+.theia
+
+# VSC
+.vscode
+.history
+*.vsix
+.history
+.ionide
+
+# PyCharm/IntelliJ
+.idea
+*.iml
+out
+
+# Eclipse
+.project
+.classpath
+
+# Python
+profile_default
+.venv
+venv
