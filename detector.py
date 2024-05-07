@@ -24,6 +24,7 @@ except ImportError:
 
 
 from onset import onset_detection
+from beat import ioi_history
 
 
 def opts_parser():
@@ -170,10 +171,14 @@ def detect_beats(sample_rate, signal, fps, spect, magspect, melspect,
     Detect beats using any of the input representations.
     Returns the positions of all beats in seconds.
     """
+    return ioi_history.detect_beats(sample_rate, signal, fps, spect, magspect, melspect,
+                                    odf_rate, odf, onsets, tempo, options)
+
     # we only have a dumb dummy implementation here.
     # it returns every 10th onset as a beat.
     # this is not a useful solution at all, just a placeholder.
-    return onsets[::10]
+
+    # return onsets[::10]
 
 
 def main():
