@@ -25,3 +25,7 @@ out
 profile_default
 .venv
 venv
+
+# ML stuff
+wandb/**
+onset_dataset.dill
