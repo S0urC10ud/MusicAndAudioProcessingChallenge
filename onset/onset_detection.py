@@ -59,7 +59,7 @@ def detect_onsets(odf_rate: int, odf: npt.NDArray, options):
     # it returns the timestamps of the 100 strongest values.
     # this is not a useful solution at all, just a placeholder.
     
-    onsets = adaptive_thresholding(odf, odf_rate, 5, 0, 1)
+    onsets = adaptive_thresholding(odf, odf_rate//10, 5, 15, 1.05)
 
     strongest_indices = np.where(onsets)[0]#fixed threshold
     return strongest_indices / odf_rate
