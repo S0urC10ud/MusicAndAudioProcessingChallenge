@@ -24,12 +24,12 @@ def onset_detection_function(sample_rate: int, signal: npt.NDArray, fps: int, sp
 
     values = spectral_difference(spect)
 
+    # normalize to roughly [0,1]
     n_outliers = len(values)//25 # //25 means 50 elements considered to be outliers in min/max calculation
-
     min_value = np.max(values[np.argpartition(values, n_outliers)[:n_outliers]])
     max_value = np.min(values[np.argpartition(values, -n_outliers)[-n_outliers:]])
-
-    values = 1000*(values-min_value)/(max_value-min_value)
+    values = (values-min_value)/(max_value-min_value)
+    
     return values, fps
 
 def adaptive_thresholding(odf: npt.NDArray, adaptive_threshold_window_size:int, required_max_window_size:int, delta:float|int, l:float|int):
@@ -72,10 +72,9 @@ def detect_onsets(odf_rate: int, odf: npt.NDArray, options):
     Returns the positions in seconds.
     """
 
-    # new
     onsets = adaptive_thresholding(odf,
         adaptive_threshold_window_size=odf_rate//10, required_max_window_size=odf_rate//15,
-        delta=20, l=1.1)
+        delta=0.005, l=1.1)
 
     strongest_indices = np.where(onsets)[0]
 
