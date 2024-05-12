@@ -29,7 +29,7 @@ def onset_detection_function(sample_rate: int, signal: npt.NDArray, fps: int, sp
     min_value = np.max(values[np.argpartition(values, n_outliers)[:n_outliers]])
     max_value = np.min(values[np.argpartition(values, -n_outliers)[-n_outliers:]])
     values = (values-min_value)/(max_value-min_value)
-    
+
     return values, fps
 
 def adaptive_thresholding(odf: npt.NDArray, adaptive_threshold_window_size:int, required_max_window_size:int, delta:float|int, l:float|int):
@@ -44,14 +44,16 @@ def adaptive_thresholding(odf: npt.NDArray, adaptive_threshold_window_size:int, 
         # and then skipping a few iterations i.e. not considering peaks after that
 
         if i > last_picked + required_max_window_size: # avoid multiple peaks
-            low = max(0, i-adaptive_threshold_window_size)
-            high = min(len(odf), i+adaptive_threshold_window_size)
-
+            
+            # check for local max
             # require to be the maximum in a local window
             req_max_low = max(0, i-required_max_window_size)
-            req_max_high = min(len(odf), i+required_max_window_size//3)
+            req_max_high = min(len(odf), i+int(required_max_window_size/3))
             is_local_max = odf[i]>=np.max(odf[req_max_low:req_max_high])
 
+            # adaptive thresholding
+            low = max(0, i-adaptive_threshold_window_size)
+            high = min(len(odf), i+adaptive_threshold_window_size)
             med = np.median(odf[low:high])
             threshold = delta + l*med
             
@@ -73,8 +75,8 @@ def detect_onsets(odf_rate: int, odf: npt.NDArray, options):
     """
 
     onsets = adaptive_thresholding(odf,
-        adaptive_threshold_window_size=odf_rate//10, required_max_window_size=odf_rate//15,
-        delta=0.005, l=1.1)
+        adaptive_threshold_window_size=odf_rate//10, required_max_window_size=odf_rate//20,
+        delta=0.01, l=1.1)
 
     strongest_indices = np.where(onsets)[0]
 
