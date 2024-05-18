@@ -24,7 +24,7 @@ except ImportError:
 
 
 from onset import onset_detection
-from beat import ioi_history
+from beat import ioi_history, autocorrelation
 
 
 def opts_parser():
@@ -161,8 +161,11 @@ def detect_tempo(sample_rate, signal, fps, spect, magspect, melspect,
     # it uses the time difference between the first two onsets to
     # define the tempo, and returns half of that as a second guess.
     # this is not a useful solution at all, just a placeholder.
-    tempo = 60 / (onsets[1] - onsets[0])
-    return [tempo / 2, tempo]
+
+    return autocorrelation.detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options)
+
+    # tempo = 60 / (onsets[1] - onsets[0])
+    # return [tempo / 2, tempo]
 
 
 def detect_beats(sample_rate, signal, fps, spect, magspect, melspect,
@@ -171,8 +174,8 @@ def detect_beats(sample_rate, signal, fps, spect, magspect, melspect,
     Detect beats using any of the input representations.
     Returns the positions of all beats in seconds.
     """
-    return ioi_history.detect_beats(sample_rate, signal, fps, spect, magspect, melspect,
-                                    odf_rate, odf, onsets, tempo, options)
+    return ioi_history.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
+    # return autocorrelation.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
 
     # we only have a dumb dummy implementation here.
     # it returns every 10th onset as a beat.
