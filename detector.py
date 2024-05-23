@@ -175,8 +175,8 @@ def detect_beats(sample_rate, signal, fps, spect, magspect, melspect,
     Detect beats using any of the input representations.
     Returns the positions of all beats in seconds.
     """
-    return multiple_agents.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
-    #return ioi_history.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
+    #return multiple_agents.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
+    return ioi_history.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
     # return autocorrelation.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
 
     # we only have a dumb dummy implementation here.
