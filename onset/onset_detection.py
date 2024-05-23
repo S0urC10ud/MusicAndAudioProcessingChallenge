@@ -11,7 +11,7 @@ def spectral_difference(spect: npt.NDArray, norm_index: int = 1) -> npt.NDArray:
     diff[:,1:] = spect[:,1:]-spect[:,:-1]
     diff[:,0] = diff[:,1]
     
-    positive_diff = np.abs(np.maximum(diff, 0))
+    positive_diff = np.abs(diff)
     return np.sum(positive_diff**norm_index, axis=1)**(1/norm_index)
 
 def onset_detection_function(sample_rate: int, signal: npt.NDArray, fps: int, spect: npt.NDArray, magspect: npt.NDArray,
@@ -32,7 +32,7 @@ def onset_detection_function(sample_rate: int, signal: npt.NDArray, fps: int, sp
 
     return values, fps
 
-def adaptive_thresholding(odf: npt.NDArray, adaptive_threshold_window_size:int, required_max_window_size:int, delta:float|int, l:float|int):
+def adaptive_thresholding(odf: npt.NDArray, adaptive_threshold_window_size:int, required_max_window_size:int, delta:float|int, l:float|int, high_window_reduction_factor: int=3):
     onsets = np.zeros_like(odf, dtype=bool)
     
     last_picked = -1000
@@ -48,7 +48,7 @@ def adaptive_thresholding(odf: npt.NDArray, adaptive_threshold_window_size:int, 
             # check for local max
             # require to be the maximum in a local window
             req_max_low = max(0, i-required_max_window_size)
-            req_max_high = min(len(odf), i+int(required_max_window_size/3))
+            req_max_high = min(len(odf), i+int(required_max_window_size/high_window_reduction_factor))
             is_local_max = odf[i]>=np.max(odf[req_max_low:req_max_high])
 
             # adaptive thresholding
@@ -68,27 +68,32 @@ def adaptive_thresholding(odf: npt.NDArray, adaptive_threshold_window_size:int, 
 
 restore_plot_false = [False]
 
-def detect_onsets(odf_rate: int, odf: npt.NDArray, options):
+
+def find_onsets(odf: npt.NDArray, odf_rate: int, adaptive_threshold_window_size:int, required_max_window_size:int, delta:float|int, l:float|int, high_window_reduction_factor:int):
+    onsets = adaptive_thresholding(odf,
+        adaptive_threshold_window_size=adaptive_threshold_window_size, required_max_window_size=required_max_window_size,
+        delta=delta, l=l, high_window_reduction_factor=high_window_reduction_factor)
+
+    strongest_indices = np.where(onsets)[0]
+
+    return strongest_indices / odf_rate
+
+def detect_onsets(odf_rate: int, odf: npt.NDArray, options) -> npt.NDArray:
     """
     Detect onsets in the onset detection function.
     Returns the positions in seconds.
     """
 
-    onsets = adaptive_thresholding(odf,
+    onsets = find_onsets(odf, odf_rate,
         adaptive_threshold_window_size=odf_rate//10, required_max_window_size=odf_rate//20,
-        delta=0.01, l=1.1)
+        delta=0.01, l=1.1,high_window_reduction_factor=3)
 
-    strongest_indices = np.where(onsets)[0]
-
-    # Debugging: show plot in case of few detected onsets
     if restore_plot_false[0]:
         restore_plot_false[0] = False
         options.plot = False
-    if len(strongest_indices) <=10:
+    if len(onsets) <=5:
+        print("WARN: few onsets detected")
         options.plot = True
         restore_plot_false[0] = True
-        
-        # can add artificial onsets in order to display plot
-        #strongest_indices = np.concatenate([[0,1,2,3], strongest_indices])
-
-    return strongest_indices / odf_rate
+    
+    return onsets

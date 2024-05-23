@@ -2,6 +2,7 @@ package io.github.danthe1st.multiple_agents;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 
 public class IO {
@@ -16,12 +17,9 @@ public class IO {
 			int numberOfOnsets;
 			try{
 				numberOfOnsets = dis.readInt();
-			}catch(IOException e){
-				if("Connection reset".equals(e.getMessage())){
-					System.out.println("connection closed by other party due to no more input: " + e.getMessage());
-					return;
-				}
-				throw e;
+			}catch(EOFException e){
+				System.out.println("connection closed by other party");
+				return;
 			}
 			double[] onsets = readDoubleArray(dis, numberOfOnsets);
 			double[] odfValues = readDoubleArray(dis, numberOfOnsets);

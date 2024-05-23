@@ -10,10 +10,10 @@ import java.util.stream.IntStream;
 import io.github.danthe1st.multiple_agents.OnsetInformation;
 
 public class BeatTracking {
-	private static final double TIMEOUT = 5;// TODO
-	private static final double STARTUP_PERIOD = 5;
+	private static final double TIMEOUT = 5;// TODO no default in paper?
+	private static final double STARTUP_PERIOD = 10;
 	private static final double TOLERANCE_INNER = 40. / 1000;
-	private static final double CORRELATION_FACTOR = 10;// TODO
+	private static final double CORRELATION_FACTOR = 10;// TODO no default in paper?
 	
 	private List<Agent> agents = new ArrayList<>();
 	private final double[] onsets;
@@ -106,10 +106,12 @@ public class BeatTracking {
 					continue;
 				}
 				Agent secondAgent = agents.get(j);
+				
+				// Due to sorting the agents, we can skip further agents if these agents are sufficiently different
 				if(secondAgent.getBeatInterval() - firstAgent.getBeatInterval() > 10. / 1000){
 					break;
 				}
-				if(firstAgent.isEquivalent(secondAgent)) {
+				if(Math.abs(firstAgent.getPrediction() - secondAgent.getPrediction()) < 20. / 1000){
 					if(firstAgent.getScore() <= secondAgent.getScore()){
 						toDelete.set(i);
 						break;

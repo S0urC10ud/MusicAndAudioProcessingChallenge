@@ -64,17 +64,17 @@ public class Agent {
 	}
 	
 	public double getPreTolerance() {
-		return beatInterval / 5;
+		return beatInterval / 6;// TODO from paper: 5
 	}
 	
 	public double getPostTolerance() {
 		return 2 * getPreTolerance();
 	}
 	
-	public boolean isEquivalent(Agent other) {
-		return (Math.abs(beatInterval - other.beatInterval) < 10. / 1000) &&
-				(Math.abs(prediction - other.prediction) < 20. / 1000);
-	}
+//	public boolean isEquivalent(Agent other) {
+//		return (Math.abs(beatInterval - other.beatInterval) < 10. / 1000) &&
+//				(Math.abs(prediction - other.prediction) < 20. / 1000);
+//	}
 	
 	public double getBeatInterval() {
 		return beatInterval;

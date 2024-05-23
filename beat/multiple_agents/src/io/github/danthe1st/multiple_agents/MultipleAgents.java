@@ -23,8 +23,11 @@ public class MultipleAgents {
 		
 		try(ServerSocket serv = new ServerSocket(1337)){
 			while(!Thread.currentThread().isInterrupted()){
-				Socket connection = serv.accept();
-				handleConnection(connection);
+				try(Socket connection = serv.accept()){
+					handleConnection(connection);
+				}catch(Exception e){
+					e.printStackTrace();
+				}
 			}
 		}
 	}
@@ -33,27 +36,33 @@ public class MultipleAgents {
 		try(DataInputStream is = new DataInputStream(new BufferedInputStream(connection.getInputStream()));
 				DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(connection.getOutputStream()))){
 			IO.readOnsets(is, piece -> {
-				List<IOICluster> clusters = Clustering.getClusters(piece.onsetTimes());
-				double[] tempoHypothesis = clusters
-					.stream()
-					.sorted(Comparator.comparingInt(IOICluster::getScore).reversed())
-					.limit(TOP_K_HYPOTHESIS)
-					.mapToDouble(IOICluster::getClusterInterval)
-					.toArray();
-				
-				System.out.println("start with " + tempoHypothesis.length + " hypothesis");
-				System.out.println("average tempo hypothesis: " + Arrays.stream(tempoHypothesis).average().orElseThrow());
-				
-				double[] beats;
-				try{
-					beats = BeatTracking.trackBeats(tempoHypothesis, piece);
-				}catch(Exception e){
-					e.printStackTrace();
-					beats = new double[0];
-				}
-				IO.sendBeats(dos, beats);
+				beatDetection(dos, piece);
 			});
 		}
+	}
+
+	private static void beatDetection(DataOutputStream dos, OnsetInformation piece) throws IOException {
+		double[] beats;
+		try{
+			System.out.println("clustering...");
+			List<IOICluster> clusters = Clustering.getClusters(piece.onsetTimes());
+			
+			double[] tempoHypothesis = clusters
+				.stream()
+				.sorted(Comparator.comparingInt(IOICluster::getScore).reversed())
+				.limit(TOP_K_HYPOTHESIS)
+				.mapToDouble(IOICluster::getClusterInterval)
+				.toArray();
+			
+			System.out.println("start with " + tempoHypothesis.length + " hypothesis");
+			System.out.println("average tempo hypothesis: " + Arrays.stream(tempoHypothesis).average().orElseThrow());
+			
+			beats = BeatTracking.trackBeats(tempoHypothesis, piece);
+		}catch(Exception e){
+			e.printStackTrace();
+			beats = new double[0];
+		}
+		IO.sendBeats(dos, beats);
 	}
 	
 }
