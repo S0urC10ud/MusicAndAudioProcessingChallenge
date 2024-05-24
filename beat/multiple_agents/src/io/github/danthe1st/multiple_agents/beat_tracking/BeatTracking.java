@@ -1,7 +1,6 @@
 package io.github.danthe1st.multiple_agents.beat_tracking;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -79,7 +78,7 @@ public class BeatTracking {
 				}
 			});
 			agents.addAll(newAgents);
-			clearDuplicateAgentsConcurrent(agentsToRemove);
+			clearDuplicateAgents(agentsToRemove);
 		}
 	}
 
@@ -89,52 +88,6 @@ public class BeatTracking {
 	}
 	
 	private void clearDuplicateAgents(List<Integer> knownAgentsToRemove) {
-		Comparator<Agent> cmp = Comparator.comparingDouble(Agent::getBeatInterval);
-		Collections.sort(agents, cmp);
-		BitSet toDelete = new BitSet(agents.size());
-		for(Integer integer : knownAgentsToRemove){
-			toDelete.set(integer);
-		}
-		for(int i = 0; i < agents.size(); i++){
-			if(toDelete.get(i)){
-				continue;
-			}
-			Agent firstAgent = agents.get(i);
-			
-			for(int j = i + 1; j < agents.size(); j++){
-				if(toDelete.get(j)){
-					continue;
-				}
-				Agent secondAgent = agents.get(j);
-				
-				// Due to sorting the agents, we can skip further agents if these agents are sufficiently different
-				if(secondAgent.getBeatInterval() - firstAgent.getBeatInterval() > 10. / 1000){
-					break;
-				}
-				if(Math.abs(firstAgent.getPrediction() - secondAgent.getPrediction()) < 20. / 1000){
-					if(firstAgent.getScore() <= secondAgent.getScore()){
-						toDelete.set(i);
-						break;
-					}
-					toDelete.set(j);
-				}
-			}
-		}
-		List<Agent> newAgents = new ArrayList<>();
-		for(int i = 0; i < agents.size(); i++){
-			Agent agent = agents.get(i);
-			if(!toDelete.get(i)){
-				newAgents.add(agent);
-			}
-		}
-		
-		int numDeleted = agents.size() - newAgents.size();
-		System.out.println("deleted " + numDeleted + "; " + newAgents.size() + " left");
-		
-		agents = newAgents;
-	}
-	
-	private void clearDuplicateAgentsConcurrent(List<Integer> knownAgentsToRemove) {
 		Comparator<Agent> cmp = Comparator.comparingDouble(Agent::getBeatInterval);
 		Collections.sort(agents, cmp);
 		boolean[] toDelete = new boolean[agents.size()];
