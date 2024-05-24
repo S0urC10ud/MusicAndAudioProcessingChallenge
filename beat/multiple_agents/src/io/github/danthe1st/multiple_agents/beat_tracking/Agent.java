@@ -20,7 +20,7 @@ public class Agent {
 	public Agent(Agent agent) {
 		beatInterval = agent.beatInterval;
 		prediction = agent.prediction;
-		history = agent.history;
+		history = new ArrayList<>(agent.history);
 		score = agent.score;
 	}
 	

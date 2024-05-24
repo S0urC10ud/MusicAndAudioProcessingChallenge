@@ -65,7 +65,7 @@ def detect_beats(sample_rate: int, signal: npt.NDArray, fps: int, spect: npt.NDA
         if n_beats==0:
             print("ERROR: no beats received")
             options.plot=True
-            return onsets[::10]
+            return onsets # for debugging
 
         target_bytes = n_beats*8
         received_data: list[float] = []
@@ -88,6 +88,6 @@ def detect_beats(sample_rate: int, signal: npt.NDArray, fps: int, spect: npt.NDA
         print(traceback.format_exc())
         options.plot=True
         reset_plot[0]=True
-        return onsets[::10]
+        return onsets # for debugging
 
     

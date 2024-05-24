@@ -50,17 +50,21 @@ public class BeatTracking {
 			
 			List<Integer> agentsToRemove = Collections.synchronizedList(new ArrayList<>());
 			List<Agent> newAgents = Collections.synchronizedList(new ArrayList<>());
-			IntStream.range(0, agents.size()).parallel().forEach(
-					j -> processEventWithAgent(onsetTime, lastOnsetTime, odfValue, agentsToRemove, newAgents, j)
+			IntStream.range(0, agents.size())
+				.mapToObj(j -> new AgentInfo(j, agents.get(j)))
+				.parallel().forEach(
+						info -> processEventWithAgent(info.agent, onsetTime, lastOnsetTime, odfValue, agentsToRemove, newAgents, info.agentId)
 			);
 			agents.addAll(newAgents);
 			clearDuplicateAgents(agentsToRemove);
 		}
 	}
+	
+	record AgentInfo(int agentId, Agent agent) {
+	}
 
-	private void processEventWithAgent(double onsetTime, final double lastOnsetTime, double odfValue,
+	private void processEventWithAgent(Agent agent, double onsetTime, final double lastOnsetTime, double odfValue,
 			List<Integer> agentsToRemove, List<Agent> newAgents, int agentId) {
-		Agent agent = agents.get(agentId);
 		if(onsetTime - agent.getLastAction() > TIMEOUT && (onsetTime - lastOnsetTime > 2 * TIMEOUT)){
 			agentsToRemove.add(agentId);
 		}else{
@@ -97,7 +101,7 @@ public class BeatTracking {
 		for(Integer integer : knownAgentsToRemove){
 			toDelete[integer] = true;
 		}
-		IntStream.range(0, agents.size()).forEach(i -> {
+		IntStream.range(0, agents.size()).parallel().forEach(i -> {
 			checkForDuplicates(toDelete, i);
 		});
 		agents = findNewAgentsWithDeletionBitmap(toDelete);
