@@ -40,9 +40,9 @@ def detect_beats(sample_rate: int, signal: npt.NDArray, fps: int, spect: npt.NDA
         options.plot=False
 
     try:
-        onsets = find_onsets(smooth_data(odf), odf_rate,
-            adaptive_threshold_window_size=odf_rate//1, required_max_window_size=odf_rate//5,
-            delta=0.03, l=0.9, high_window_reduction_factor=1)
+        #onsets = find_onsets(smooth_data(odf), odf_rate,
+        #    adaptive_threshold_window_size=odf_rate//1, required_max_window_size=odf_rate//5,
+        #    delta=0.03, l=0.9, high_window_reduction_factor=1)
 
 
         sock.send(struct.pack("!i", len(onsets)))

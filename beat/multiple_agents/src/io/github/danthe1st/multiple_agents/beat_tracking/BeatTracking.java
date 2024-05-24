@@ -70,8 +70,13 @@ public class BeatTracking {
 		if(onsetTime - agent.getLastAction() > TIMEOUT && (Math.abs(onsetTime - lastOnsetTime) < TIMEOUT / 5)){
 			agentsToRemove.add(agentId);
 		}else{
+//			int i = 0;
 			while(agent.getPrediction() + agent.getPostTolerance() < onsetTime){
+//				if(i++ != 0){//interpolation
+//					agent.setLastAction(onsetTime);
+//				}
 				agent.increasePrediction();
+//				agent.setLastAction(onsetTime);
 			}
 			if(isInTolerance(onsetTime, agent)){
 				if(Math.abs(agent.getPrediction()-onsetTime)>TOLERANCE_INNER) {

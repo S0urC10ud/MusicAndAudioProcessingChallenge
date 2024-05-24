@@ -68,7 +68,7 @@ public class Agent {
 	}
 	
 	public double getPostTolerance() {
-		return 8 * getPreTolerance();// TODO in paper: 2 * getPreTolerance()
+		return 6 * getPreTolerance();// TODO in paper: 2 * getPreTolerance()
 	}
 	
 //	public boolean isEquivalent(Agent other) {
