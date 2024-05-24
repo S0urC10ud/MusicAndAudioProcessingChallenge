@@ -66,6 +66,7 @@ public class BeatTracking {
 
 	private void processEventWithAgent(Agent agent, double onsetTime, final double lastOnsetTime, double odfValue,
 			List<Integer> agentsToRemove, List<Agent> newAgents, int agentId) {
+		// if there are few acceptable onsets, ignore the timeouts
 		if(onsetTime - agent.getLastAction() > TIMEOUT && (Math.abs(onsetTime - lastOnsetTime) < TIMEOUT / 5)){
 			agentsToRemove.add(agentId);
 		}else{

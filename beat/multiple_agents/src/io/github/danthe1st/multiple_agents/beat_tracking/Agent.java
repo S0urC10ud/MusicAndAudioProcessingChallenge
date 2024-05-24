@@ -64,11 +64,11 @@ public class Agent {
 	}
 	
 	public double getPreTolerance() {
-		return beatInterval / 6;// TODO from paper: 5
+		return beatInterval / 4;// TODO from paper: beatInterval / 5
 	}
 	
 	public double getPostTolerance() {
-		return 2 * getPreTolerance();
+		return 8 * getPreTolerance();// TODO in paper: 2 * getPreTolerance()
 	}
 	
 //	public boolean isEquivalent(Agent other) {
