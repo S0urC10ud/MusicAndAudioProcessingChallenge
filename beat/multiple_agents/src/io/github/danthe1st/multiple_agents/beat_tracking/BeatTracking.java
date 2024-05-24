@@ -52,7 +52,8 @@ public class BeatTracking {
 			List<Agent> newAgents = Collections.synchronizedList(new ArrayList<>());
 			IntStream.range(0, agents.size())
 				.mapToObj(j -> new AgentInfo(j, agents.get(j)))
-				.parallel().forEach(
+//				.parallel()
+				.forEach(
 						info -> processEventWithAgent(info.agent, onsetTime, lastOnsetTime, odfValue, agentsToRemove, newAgents, info.agentId)
 			);
 			agents.addAll(newAgents);
@@ -101,7 +102,7 @@ public class BeatTracking {
 		for(Integer integer : knownAgentsToRemove){
 			toDelete[integer] = true;
 		}
-		IntStream.range(0, agents.size()).parallel().forEach(i -> {
+		IntStream.range(0, agents.size()).forEach(i -> {
 			checkForDuplicates(toDelete, i);
 		});
 		agents = findNewAgentsWithDeletionBitmap(toDelete);
@@ -116,7 +117,7 @@ public class BeatTracking {
 			}
 		}
 		
-		int numDeleted = agents.size() - newAgents.size();
+//		int numDeleted = agents.size() - newAgents.size();
 //		System.out.println("deleted " + numDeleted + "; " + newAgents.size() + " left");
 		
 		return newAgents;
