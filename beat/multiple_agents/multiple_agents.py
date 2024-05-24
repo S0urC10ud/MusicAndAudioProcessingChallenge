@@ -50,7 +50,7 @@ def detect_beats(sample_rate: int, signal: npt.NDArray, fps: int, spect: npt.NDA
         odf_indices = np.array(onsets*odf_rate, int)
         odf_values = odf[odf_indices]
 
-        odf_values = np.log(odf_values+1)
+        #odf_values = np.log(odf_values+1)
 
         sock.send(struct.pack(f'>{len(onsets)}d', *onsets))
         sock.send(struct.pack(f'>{len(onsets)}d', *odf_values))
@@ -82,6 +82,7 @@ def detect_beats(sample_rate: int, signal: npt.NDArray, fps: int, spect: npt.NDA
         sanity = sock.recv(1)
         if sanity != b'\x00':
             raise ValueError("wrong sanity byte")
+        #return onsets
         return np.array(received_beats)
     except struct.error as e:
         print("ERROR ")

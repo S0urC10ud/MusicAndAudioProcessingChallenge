@@ -41,8 +41,8 @@ public class BeatTracking {
 		for(int i = 0; i < onsets.length; i++){
 			double onsetTime = onsets[i];
 			final double lastOnsetTime;
-			if(i > 0){
-				lastOnsetTime = onsets[i - 1];
+			if(i > 10){
+				lastOnsetTime = onsets[i - 10];
 			}else{
 				lastOnsetTime = 0;
 			}
@@ -65,7 +65,7 @@ public class BeatTracking {
 
 	private void processEventWithAgent(Agent agent, double onsetTime, final double lastOnsetTime, double odfValue,
 			List<Integer> agentsToRemove, List<Agent> newAgents, int agentId) {
-		if(onsetTime - agent.getLastAction() > TIMEOUT && (onsetTime - lastOnsetTime > 2 * TIMEOUT)){
+		if(onsetTime - agent.getLastAction() > TIMEOUT && (Math.abs(onsetTime - lastOnsetTime) < TIMEOUT / 5)){
 			agentsToRemove.add(agentId);
 		}else{
 			while(agent.getPrediction() + agent.getPostTolerance() < onsetTime){
@@ -117,7 +117,7 @@ public class BeatTracking {
 		}
 		
 		int numDeleted = agents.size() - newAgents.size();
-		System.out.println("deleted " + numDeleted + "; " + newAgents.size() + " left");
+//		System.out.println("deleted " + numDeleted + "; " + newAgents.size() + " left");
 		
 		return newAgents;
 	}

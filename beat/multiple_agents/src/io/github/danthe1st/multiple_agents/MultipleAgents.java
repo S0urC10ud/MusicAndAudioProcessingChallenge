@@ -49,13 +49,15 @@ public class MultipleAgents {
 			
 			double[] tempoHypothesis = clusters
 				.stream()
+				.filter(h -> h.getClusterInterval() < 3)
 				.sorted(Comparator.comparingInt(IOICluster::getScore).reversed())
 				.limit(TOP_K_HYPOTHESIS)
 				.mapToDouble(IOICluster::getClusterInterval)
 				.toArray();
 			
-			System.out.println("start with " + tempoHypothesis.length + " hypothesis");
+//			System.out.println("start with " + tempoHypothesis.length + " hypothesis");
 			System.out.println("average tempo hypothesis: " + Arrays.stream(tempoHypothesis).average().orElseThrow());
+			System.out.println("min hypothesis: " + Arrays.stream(tempoHypothesis).min().orElseThrow());
 			
 			beats = BeatTracking.trackBeats(tempoHypothesis, piece);
 		}catch(Exception e){
