@@ -52,7 +52,7 @@ public class BeatTracking {
 			
 			List<Integer> agentsToRemove = Collections.synchronizedList(new ArrayList<>());
 			List<Agent> newAgents = new ArrayList<>();
-			IntStream.range(0, agents.size()).forEach(j -> {
+			IntStream.range(0, agents.size()).parallel().forEach(j -> {
 				Agent agent = agents.get(j);
 				if(onsetTime - agent.getLastAction() > TIMEOUT && (onsetTime - lastOnsetTime > 2 * TIMEOUT)){
 //					it.remove();
@@ -79,7 +79,7 @@ public class BeatTracking {
 				}
 			});
 			agents.addAll(newAgents);
-			clearDuplicateAgents(agentsToRemove);
+			clearDuplicateAgentsConcurrent(agentsToRemove);
 		}
 	}
 
@@ -124,6 +124,52 @@ public class BeatTracking {
 		for(int i = 0; i < agents.size(); i++){
 			Agent agent = agents.get(i);
 			if(!toDelete.get(i)){
+				newAgents.add(agent);
+			}
+		}
+		
+		int numDeleted = agents.size() - newAgents.size();
+		System.out.println("deleted " + numDeleted + "; " + newAgents.size() + " left");
+		
+		agents = newAgents;
+	}
+	
+	private void clearDuplicateAgentsConcurrent(List<Integer> knownAgentsToRemove) {
+		Comparator<Agent> cmp = Comparator.comparingDouble(Agent::getBeatInterval);
+		Collections.sort(agents, cmp);
+		boolean[] toDelete = new boolean[agents.size()];
+		for(Integer integer : knownAgentsToRemove){
+			toDelete[integer] = true;
+		}
+		IntStream.range(0, agents.size()).parallel().forEach(i -> {
+			if(toDelete[i]){
+				return;
+			}
+			Agent firstAgent = agents.get(i);
+			
+			for(int j = i + 1; j < agents.size(); j++){
+				if(toDelete[j]){
+					continue;
+				}
+				Agent secondAgent = agents.get(j);
+				
+				// Due to sorting the agents, we can skip further agents if these agents are sufficiently different
+				if(secondAgent.getBeatInterval() - firstAgent.getBeatInterval() > 10. / 1000){
+					break;
+				}
+				if(Math.abs(firstAgent.getPrediction() - secondAgent.getPrediction()) < 20. / 1000){
+					if(firstAgent.getScore() <= secondAgent.getScore()){
+						toDelete[i] = true;
+						break;
+					}
+					toDelete[j] = true;
+				}
+			}
+		});
+		List<Agent> newAgents = new ArrayList<>();
+		for(int i = 0; i < agents.size(); i++){
+			Agent agent = agents.get(i);
+			if(!toDelete[i]){
 				newAgents.add(agent);
 			}
 		}
