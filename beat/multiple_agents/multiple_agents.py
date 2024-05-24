@@ -60,6 +60,7 @@ def detect_beats(sample_rate: int, signal: npt.NDArray, fps: int, spect: npt.NDA
         n_beats_tuple = struct.unpack("!i",sock.recv(4))
         assert len(n_beats_tuple)==1
         n_beats = n_beats_tuple[0]
+        assert n_beats>=0, "expect positive number of beats received"
 
         if n_beats==0:
             print("ERROR: no beats received")
