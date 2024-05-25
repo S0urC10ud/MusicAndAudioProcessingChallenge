@@ -23,7 +23,7 @@ except ImportError:
     tqdm = None
 
 
-from onset import onset_detection
+from onset import onset_detection, superflux
 from beat import ioi_history, autocorrelation
 from beat.multiple_agents import multiple_agents
 
@@ -64,7 +64,7 @@ def detect_everything(filename, options):
     fps = 70
     hop_length = sample_rate // fps
     spect = librosa.stft(
-            signal, n_fft=4096, hop_length=hop_length, window='hann')
+            signal, n_fft=2048, hop_length=hop_length, window='hann')
 
     # only keep the magnitude
     magspect = np.abs(spect)
@@ -125,6 +125,7 @@ def onset_detection_function(sample_rate, signal, fps, spect, magspect,
     where the onsets are. Returns the function values and its sample/frame
     rate in values per second as a tuple: (values, values_per_second)
     """
+    return superflux.onset_detection_function(sample_rate, signal, fps, spect, magspect,melspect, options)
     return onset_detection.onset_detection_function(sample_rate, signal, fps, spect, magspect,melspect, options)
 
     # we only have a dumb dummy implementation here.
@@ -142,6 +143,7 @@ def detect_onsets(odf_rate, odf, options):
     Returns the positions in seconds.
     """
 
+    return superflux.detect_onsets(odf_rate, odf, options)
     return onset_detection.detect_onsets(odf_rate, odf, options)
 
     # we only have a dumb dummy implementation here.
@@ -175,7 +177,8 @@ def detect_beats(sample_rate, signal, fps, spect, magspect, melspect,
     Detect beats using any of the input representations.
     Returns the positions of all beats in seconds.
     """
-    #return multiple_agents.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
+    
+    return multiple_agents.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
     return ioi_history.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
     # return autocorrelation.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
 
@@ -183,7 +186,7 @@ def detect_beats(sample_rate, signal, fps, spect, magspect, melspect,
     # it returns every 10th onset as a beat.
     # this is not a useful solution at all, just a placeholder.
 
-    # return onsets[::10]
+    #return onsets[::10]
 
 
 def main():
