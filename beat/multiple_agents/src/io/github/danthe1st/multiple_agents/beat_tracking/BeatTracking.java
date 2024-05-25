@@ -9,10 +9,10 @@ import java.util.stream.IntStream;
 import io.github.danthe1st.multiple_agents.OnsetInformation;
 
 public class BeatTracking {
-	private static final double TIMEOUT = 5;// TODO no default in paper?
+	private static final double TIMEOUT = 5.6;// TODO no default in paper?
 	private static final double STARTUP_PERIOD = 10;
 	private static final double TOLERANCE_INNER = 40. / 1000;
-	private static final double CORRELATION_FACTOR = 10;// TODO no default in paper?
+	private static final double CORRELATION_FACTOR = 35;// TODO no default in paper?
 	
 	private List<Agent> agents = new ArrayList<>();
 	private final double[] onsets;

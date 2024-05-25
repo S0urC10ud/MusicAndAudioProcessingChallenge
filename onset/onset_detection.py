@@ -15,7 +15,7 @@ def spectral_difference(spect: npt.NDArray, norm_index: int = 1) -> npt.NDArray:
     return np.sum(positive_diff**norm_index, axis=1)**(1/norm_index)
 
 def onset_detection_function(sample_rate: int, signal: npt.NDArray, fps: int, spect: npt.NDArray, magspect: npt.NDArray,
-                             melspect: npt.NDArray, options):
+                             melspect: npt.NDArray, options) -> tuple[npt.NDArray, int]:
     """
     Compute an onset detection function. Ideally, this would have peaks
     where the onsets are. Returns the function values and its sample/frame
