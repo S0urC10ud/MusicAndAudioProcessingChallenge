@@ -29,3 +29,5 @@ venv
 # ML stuff
 wandb/**
 onset_dataset.dill
+lightning_logs/**
+lightning_talks/**

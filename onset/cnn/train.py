@@ -14,6 +14,19 @@ from dotdict import DotAccessibleDict
 import librosa
 from sklearn.metrics import confusion_matrix, accuracy_score
 
+def print_histogram(data, bins=10, width=50):
+    # Calculate histogram data
+    hist, bin_edges = np.histogram(data, bins=bins)
+    max_count = max(hist)
+
+    # Scale factor to fit the histogram in the given width
+    scale = width / max_count
+
+    # Print the histogram
+    for count, edge in zip(hist, bin_edges[:-1]):
+        bar = '#' * int(count * scale)
+        print(f'{edge:10.3f} - {edge + (bin_edges[1] - bin_edges[0]):10.3f}: {bar}')
+
 
 def train_test_split(dataset_dir, test_size=0.2, seed=42):
     files = [os.path.join(dataset_dir, f) for f in os.listdir(dataset_dir) if f.endswith('.wav')]
@@ -25,19 +38,18 @@ def train_test_split(dataset_dir, test_size=0.2, seed=42):
     return train_files, test_files
 
 
-def train_model(train_files, wavfile_train_data, onset_train_data, test_files, wavfile_test_data, onset_test_data, config, epochs=25000):
+def train_model(train_files, wavfile_train_data, onset_train_data, test_files, wavfile_test_data, onset_test_data, config, epochs=125000):
     train_dataset = OnsetDetectionDataset(train_files, wavfile_train_data, onset_train_data, sample_delta=7, n_mels=config.n_mels, hop_length=config.hop_length)
-    test_dataset = OnsetDetectionDataset(test_files, wavfile_test_data, onset_test_data, sample_delta=7, n_mels=config.n_mels, hop_length=config.hop_length)
+    test_dataset = OnsetDetectionDataset(test_files, wavfile_test_data, onset_test_data, sample_delta=7, n_mels=config.n_mels, hop_length=config.hop_length, onset_one_in=8)
 
     # Use a higher number of workers and enable pin_memory for faster host to GPU transfers
     train_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0, pin_memory=True)
     test_loader = DataLoader(test_dataset, batch_size=100, shuffle=False, num_workers=0, pin_memory=True)
 
-
-    model = CustomCNN(conv1_kernel_size=config.conv1_kernel_size, conv2_kernel_size=config.conv2_kernel_size, conv2_dimensions = config.conv2_dimensions, conv_out_dimensions = config.conv_out_dimensions, linear_out=config.linear_out)
+    model = CustomCNN(conv1_kernel_size=config.conv1_kernel_size, conv2_kernel_size=config.conv2_kernel_size, conv2_dimensions=config.conv2_dimensions, conv_out_dimensions=config.conv_out_dimensions, linear_out=config.linear_out,pool_size_1=config.pool_size_1, pool_size_2 =config.pool_size_2, dropout=config.dropout)
     model.cuda()
     criterion = nn.BCELoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate)
+    optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
 
     for epoch in range(epochs):
         total_train_loss = 0
@@ -78,17 +90,16 @@ def train_model(train_files, wavfile_train_data, onset_train_data, test_files, w
                 all_test_preds.extend(test_preds.cpu().numpy())
                 all_test_targets.extend(targets.cpu().numpy())
 
-        avg_test_loss = total_test_loss / len(test_loader)
-        test_accuracy = accuracy_score(all_test_targets, all_test_preds)
-        test_confusion_mat = confusion_matrix(all_test_targets, all_test_preds)
-
-
+        # avg_test_loss = total_test_loss / len(test_loader)
+        # test_accuracy = accuracy_score(all_test_targets, all_test_preds)
+        # test_confusion_mat = confusion_matrix(all_test_targets, all_test_preds)
         # Save the model periodically or at certain epochs
-        if (epoch+1) % 25 == 0:  # Every 25 epochs
+        if (epoch+1) % 100 == 0:  # Every 100 epochs
             print("-"*40)
-            print(f'Epoch {epoch+1}, Train Loss: {avg_train_loss:.4f}, Train Accuracy: {train_accuracy:.4f}, Test Loss: {avg_test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}')
+            print(f'Epoch {epoch+1}, Train Loss: {avg_train_loss:.4f}, Train Accuracy: {train_accuracy:.4f}')# Test Loss: {avg_test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}')
             print("Train Confusion Matrix:\n", train_confusion_mat)
-            print("Test Confusion Matrix:\n", test_confusion_mat)
+            #print("Test Confusion Matrix:\n", test_confusion_mat)
+            #print_histogram(all_test_preds, bins=5, width=10)
             print("-"*40)
             with open(f"cnn_output.dmp", "wb") as dmp_file:
                 dill.dump(model, dmp_file)
@@ -96,23 +107,32 @@ def train_model(train_files, wavfile_train_data, onset_train_data, test_files, w
 current_config = DotAccessibleDict({
     'hop_length': 44,
     'conv1_kernel_size': (3,7),
-    'conv2_kernel_size': (3,3),
-    'conv2_dimensions': 20,
-    'conv_out_dimensions': 50,
-    'linear_out': 256,
+    'conv2_kernel_size': (2,1),
+    'conv2_dimensions': 50,
+    'conv_out_dimensions': 600,
+    'linear_out': 128,
     'n_mels': 80,
-    'learning_rate': 0.00001,
-    'batch_size': 40
+    'learning_rate': 0.001,
+    'batch_size': 64,
+    "pool_size_1": [1,2],
+    "pool_size_2": [1,3],
+    "weight_decay": 0.0001,
+    "dropout":0
 })
 
 reload_data = False
 
 if __name__ == '__main__':
-    train_files, test_files = train_test_split('data/train_extra_onsets/', test_size=0.2, seed=42)
+    train_files, test_files = train_test_split('data/train_extra_onsets/', test_size=0, seed=42)
     wavfile_train_data = {}
     onset_train_data = {}
     
     if reload_data:
+        with open("expected_mus.npy", "rb") as expected_vals_handle:
+            stored_mus = np.load(expected_vals_handle)
+        with open("expected_stds.npy", "rb") as expected_stds_handle:
+            stored_stds = np.load(expected_stds_handle)
+
         for t in tqdm(train_files):
             sample_rate, audio = wavfile.read(t)
             if audio.dtype.kind == 'i':
@@ -123,14 +143,33 @@ if __name__ == '__main__':
             full_spectrograms = []
             for n_fft in [4096, 2048, 1024]:
                 spectrogram = librosa.feature.melspectrogram(y=audio, sr=sample_rate, n_fft=n_fft, hop_length=current_config.hop_length, n_mels=current_config.n_mels)
-                log_spectrogram = librosa.power_to_db(spectrogram, ref=np.max)
+                log_spectrogram = librosa.power_to_db(spectrogram)
                 full_spectrograms.append(log_spectrogram)
 
-            wavfile_train_data[t] = sample_rate, np.stack(full_spectrograms, axis=0) 
+            stacked_spectrograms = np.stack(full_spectrograms, axis=0)
+
+            for frequency_id in range(3):
+                for mel_band in range(current_config.n_mels):
+                    stacked_spectrograms[frequency_id][mel_band] = (stacked_spectrograms[frequency_id][mel_band] - stored_mus[frequency_id][mel_band]) / stored_stds[frequency_id][mel_band]
+
+            wavfile_train_data[t] = sample_rate, stacked_spectrograms
 
             with open(t.replace(".wav", ".onsets.gt"), 'r') as f:
                 onset_train_data[t] =  np.array([float(line.strip()) for line in f if line.strip()], dtype=np.float32)
-            
+        
+        # Code I used to generate pre-computed standardization values over the train set
+        #expected_means = np.zeros(shape=(3, current_config.n_mels))
+        #expected_stds = np.zeros(shape=(3, current_config.n_mels))
+        #for frequency_id in range(3):
+        #    for mel_band in range(current_config.n_mels):
+        #        expected_means[frequency_id][mel_band] = np.average(np.array([np.average(v[1][frequency_id][mel_band]) for k,v in wavfile_train_data.items()]))
+        #        expected_stds[frequency_id][mel_band] = np.average(np.array([np.std(v[1][frequency_id][mel_band]) for k,v in wavfile_train_data.items()]))
+        #with open("expected_mus.npy", "wb") as expected_vals_handle:
+        #    np.save(expected_vals_handle, expected_means)
+
+        #with open("expected_stds.npy", "wb") as expected_stds_handle:
+        #    np.save(expected_stds_handle, expected_stds)
+
         wavfile_test_data = {}
         onset_test_data = {}
         for t in tqdm(test_files):
@@ -142,10 +181,16 @@ if __name__ == '__main__':
             full_spectrograms = []
             for n_fft in [4096, 2048, 1024]:
                 spectrogram = librosa.feature.melspectrogram(y=audio, sr=sample_rate, n_fft=n_fft, hop_length=current_config.hop_length, n_mels=current_config.n_mels)
-                log_spectrogram = librosa.power_to_db(spectrogram, ref=np.max)
+                log_spectrogram = librosa.power_to_db(spectrogram)
                 full_spectrograms.append(log_spectrogram)
 
-            wavfile_test_data[t] = sample_rate, np.stack(full_spectrograms, axis=0) 
+            stacked_spectrograms = np.stack(full_spectrograms, axis=0)
+
+            for frequency_id in range(3):
+                for mel_band in range(current_config.n_mels):
+                    stacked_spectrograms[frequency_id][mel_band] = (stacked_spectrograms[frequency_id][mel_band] - stored_mus[frequency_id][mel_band]) / stored_stds[frequency_id][mel_band]
+
+            wavfile_test_data[t] = sample_rate, stacked_spectrograms
 
             with open(t.replace(".wav", ".onsets.gt"), 'r') as f:
                 onset_test_data[t] =  np.array([float(line.strip()) for line in f if line.strip()], dtype=np.float32)
@@ -154,5 +199,7 @@ if __name__ == '__main__':
     else:
         with open("onset_dataset.dill", "rb") as onset_dataset_file:
             train_files, wavfile_train_data, onset_train_data, test_files, wavfile_test_data, onset_test_data = dill.load(onset_dataset_file)
-        
-    train_model(train_files, wavfile_train_data, onset_train_data, test_files, wavfile_test_data, onset_test_data, current_config)
+    
+    wavfile_train_data.update(wavfile_test_data)
+    onset_train_data.update(onset_test_data)
+    train_model(train_files + test_files, wavfile_train_data, onset_train_data, [], {}, {}, current_config)

@@ -1,0 +1,1 @@
+The idea and some code was heavily adapted from https://github.com/csteinmetz1/wavebeat/tree/main.
