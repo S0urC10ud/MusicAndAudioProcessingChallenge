@@ -35,25 +35,29 @@ public class MultipleAgents {
 	private static void handleConnection(Socket connection) throws IOException {
 		try(DataInputStream is = new DataInputStream(new BufferedInputStream(connection.getInputStream()));
 				DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(connection.getOutputStream()))){
-			IO.readOnsets(is, piece -> {
-				beatDetection(dos, piece);
-			});
+			IO.readOnsets(
+					is, piece -> beatDetection(dos, piece), onsets -> tempoEstimation(dos, onsets)
+			);
 		}
 	}
 
+	private static void tempoEstimation(DataOutputStream dos, double[] onsets) throws IOException {
+		double[] hypothesis = Clustering.getClusters(onsets)
+			.stream()
+			.sorted(Comparator.comparingInt(IOICluster::getScore).reversed())
+			.mapToDouble(c -> 60 / c.getClusterInterval())
+			.filter(bpm -> bpm >= 60 && bpm <= 200)
+			.limit(2)
+			.toArray();
+		
+		IO.sendArray(dos, hypothesis);
+	}
+	
 	private static void beatDetection(DataOutputStream dos, OnsetInformation piece) throws IOException {
 		double[] beats;
 		try{
 			System.out.println("clustering...");
-			List<IOICluster> clusters = Clustering.getClusters(piece.onsetTimes());
-			
-			double[] tempoHypothesis = clusters
-				.stream()
-				.filter(h -> h.getClusterInterval() < 3)
-				.sorted(Comparator.comparingInt(IOICluster::getScore).reversed())
-				.limit(TOP_K_HYPOTHESIS)
-				.mapToDouble(IOICluster::getClusterInterval)
-				.toArray();
+			double[] tempoHypothesis = getIntervalHypothesis(piece.onsetTimes(), TOP_K_HYPOTHESIS);
 			
 //			System.out.println("start with " + tempoHypothesis.length + " hypothesis");
 			System.out.println("average tempo hypothesis: " + Arrays.stream(tempoHypothesis).average().orElseThrow());
@@ -64,7 +68,19 @@ public class MultipleAgents {
 			e.printStackTrace();
 			beats = new double[0];
 		}
-		IO.sendBeats(dos, beats);
+		IO.sendArray(dos, beats);
+	}
+	
+	private static double[] getIntervalHypothesis(double[] onsetTimes, int numberOfHypothesis) {
+		List<IOICluster> clusters = Clustering.getClusters(onsetTimes);
+		
+		return clusters
+			.stream()
+			.filter(h -> h.getClusterInterval() < 3)
+			.sorted(Comparator.comparingInt(IOICluster::getScore).reversed())
+			.limit(numberOfHypothesis)
+			.mapToDouble(IOICluster::getClusterInterval)
+			.toArray();
 	}
 	
 }
