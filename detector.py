@@ -165,7 +165,7 @@ def detect_tempo(sample_rate, signal, fps, spect, magspect, melspect,
     # define the tempo, and returns half of that as a second guess.
     # this is not a useful solution at all, just a placeholder.
 
-    #return multiple_agents.detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options)
+    return multiple_agents.detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options)
     return autocorrelation.detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options)
 
     # tempo = 60 / (onsets[1] - onsets[0])
