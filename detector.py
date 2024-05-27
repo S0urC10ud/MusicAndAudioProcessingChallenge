@@ -18,6 +18,7 @@ import numpy as np
 from scipy.io import wavfile
 import librosa
 
+import beat.autocorrelation
 import tempo.autocorrelation
 
 try:
@@ -185,8 +186,8 @@ def detect_beats(sample_rate, signal, fps, spect, magspect, melspect,
     """
     
     # return multiple_agents.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
-    return ioi_history.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
-    # return beat.autocorrelation.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
+    # return ioi_history.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
+    return beat.autocorrelation.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
 
     # we only have a dumb dummy implementation here.
     # it returns every 10th onset as a beat.
