@@ -74,13 +74,3 @@ def detect_beats(sample_rate, signal, fps, spect, magspect, melspec, odf_rate, o
             next_predicted_beat = next_predicted_beat + beat_duration
 
     return beats
-
-
-def detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options):
-    min_lag, max_lag = get_lag_range(fps)
-    autocorr = compute_autocorrelation(odf)[min_lag:max_lag]
-    peaks = find_peaks(autocorr)
-
-    # Maybe we can improve by return the highest peak left of the first one
-    estimated_bpm = compute_bpm_estimate(peaks, autocorr, fps, min_lag)
-    return [estimated_bpm / 2, estimated_bpm]
