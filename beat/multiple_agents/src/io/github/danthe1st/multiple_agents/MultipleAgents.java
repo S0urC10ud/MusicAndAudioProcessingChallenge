@@ -19,7 +19,6 @@ public class MultipleAgents {
 	
 	private static final int TOP_K_HYPOTHESIS_BEAT_TRACKING = 10;
 	private static final double MAX_CLUSTER_WIDTH_BEAT_TRACKING = 25. / 1000;
-//	private static final double MAX_CLUSTER_WIDTH_TEMPO_ESTIMATION = 20. / 1000;
 	private static final double MAX_CLUSTER_WIDTH_TEMPO_ESTIMATION = 21. / 1000;
 	
 	public static void main(String[] args) throws IOException {

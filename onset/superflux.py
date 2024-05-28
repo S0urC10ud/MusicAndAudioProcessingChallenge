@@ -31,8 +31,6 @@ def onset_detection_function(sample_rate: int, signal: npt.NDArray, fps: int, sp
     rectified = (diff+np.floor(diff))/2
     pos_rect = np.maximum(rectified, 0)
     
-    # TODO filter before sum   
-    #filtered = scipy.ndimage.maximum_filter(pos_rect, size=(0,3))
     filtered = pos_rect
     logdiff = np.log10(filtered+1)
     
@@ -67,7 +65,7 @@ def detect_onsets(odf_rate: int, odf: npt.NDArray, options) -> npt.NDArray:
     pre_avg = odf_rate//10
     post_avg = int(odf_rate*70/1000)
     combination_width = int(odf_rate*30/1000)
-    delta = 0.1 # TODO
+    delta = 0.1
 
     last_onset = 0
     onset_indices = []
@@ -83,6 +81,3 @@ def detect_onsets(odf_rate: int, odf: npt.NDArray, options) -> npt.NDArray:
     
 
     return np.array(onset_indices) / odf_rate
-
-
-    return onsets
