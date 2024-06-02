@@ -1,6 +1,6 @@
-from loss import BCFELoss
-from eval import evaluate, find_beats
-from plot import plot_activations, make_table, plot_histogram
+from beat.wavebeat.loss import BCFELoss
+from beat.wavebeat.eval import evaluate, find_beats
+from beat.wavebeat.plot import plot_activations, make_table, plot_histogram
 import torch
 from argparse import ArgumentParser
 import os
@@ -81,13 +81,13 @@ class Base(pl.LightningModule):
         p_beats = pred[0,0,:]
         p_downbeats = pred[0,1,:]
 
-        _, beats, _ = find_beats(p_beats.numpy(), 
-                                    p_beats.numpy(), 
+        _, beats, _ = find_beats(p_beats.detach().cpu().numpy(), 
+                                    p_beats.detach().cpu().numpy(), 
                                     beat_type="beat",
                                     sample_rate=self.target_sample_rate)
 
-        _, downbeats, _ = find_beats(p_downbeats.numpy(), 
-                                        p_downbeats.numpy(), 
+        _, downbeats, _ = find_beats(p_downbeats.detach().cpu().numpy(), 
+                                        p_downbeats.detach().cpu().numpy(), 
                                         beat_type="downbeat",
                                         sample_rate=self.target_sample_rate)
 

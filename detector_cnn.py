@@ -130,7 +130,7 @@ def onset_detection_function(sample_rate, signal, fps, spect, magspect,
     where the onsets are. Returns the function values and its sample/frame
     rate in values per second as a tuple: (values, values_per_second)
     """
-    return perform_inference(signal, sample_rate), sample_rate / 44 # where 44 is the hop size
+    return perform_inference(signal, sample_rate), sample_rate / 441 # where 44 is the hop size
 
     # we only have a dumb dummy implementation here.
     # it returns every 1000th absolute sample value of the input signal.
@@ -140,8 +140,20 @@ def onset_detection_function(sample_rate, signal, fps, spect, magspect,
     values_per_second = sample_rate / 1000
     return values, values_per_second
 
-
 def detect_onsets(odf_rate, odf, options):
+    """
+    Detect onsets in the onset detection function.
+    Returns the positions in seconds.
+    """
+    threshold = 0.8
+    peaks=[]
+    for ind in range(1,len(odf)-1):
+        if (odf[ind]>threshold) and (odf[ind+1] < odf[ind] > odf[ind-1]):
+            peaks.append(ind)
+    return np.array(peaks) / odf_rate
+    
+
+def detect_onsets_old(odf_rate, odf, options):
     """
     Detect onsets in the onset detection function.
     Returns the positions in seconds.
@@ -157,14 +169,13 @@ def detect_onsets(odf_rate, odf, options):
             potential_peak = None
     if potential_peak is not None:
         peaks.append(potential_peak)
-    return scipy.signal.find_peaks(odf, distance = 50, prominence=options.threshold, wlen=500, height=0.9, width=20)[0] / odf_rate
-
-    # we only have a dumb dummy implementation here.
-    # it returns the timestamps of the 100 strongest values.
-    # this is not a useful solution at all, just a placeholder.
-    strongest_indices = np.argpartition(odf, 100)[:100]
-    strongest_indices.sort()
-    return strongest_indices / odf_rate
+    #width = 30
+    #flattened_detection_fn = np.convolve(odf, np.ones(width), mode="same")
+    #flattened_detection_fn = np.convolve(flattened_detection_fn, np.ones(width), mode="same")
+    #flattened_detection_fn = np.convolve(flattened_detection_fn, np.ones(width), mode="same")
+    #flattened_detection_fn /= np.max(flattened_detection_fn)
+    #return scipy.signal.find_peaks(flattened_detection_fn, distance = 50, prominence=options.threshold, wlen=50)[0] / odf_rate
+    return np.array(peaks) / odf_rate
 
 
 def detect_tempo(sample_rate, signal, fps, spect, magspect, melspect,

@@ -7,35 +7,24 @@ from argparse import ArgumentParser
 
 from model import dsTCNModel
 
-parser = ArgumentParser()
-model="checkpoints/"
-input_file = "data/train/ff123_beo1test.wav"
+checkpoints_dir="checkpoints/"
 
-# find the checkpoint path
-ckpts = glob.glob(os.path.join(model, "*.ckpt"))
-if len(ckpts) < 1:
-    raise RuntimeError(f"No checkpoints found in {model}.")
-else:
-    ckpt_path = ckpts[-1]
+def apply_wavebeat(filename):
 
-# construct the model, and load weights from checkpoint
-print(f"Loading from checkpoint {ckpt_path}")
-model = dsTCNModel.load_from_checkpoint(ckpt_path)
+    # find the checkpoint path
+    ckpts = glob.glob(os.path.join(checkpoints_dir, "*.ckpt"))
+    if len(ckpts) < 1:
+        raise RuntimeError(f"No checkpoints found in {checkpoints_dir}.")
+    else:
+        ckpt_path = ckpts[-1]
 
-# set model to eval mode
-model.eval()
+    model = dsTCNModel.load_from_checkpoint(ckpt_path)
 
-# get the locations of the beats and downbeats
-beats, downbeats = model.predict_beats(input_file, use_gpu=True)
+    model.eval()
+    beats, downbeats = model.predict_beats(filename)
 
-# print some results to terminal
-print(f"Beats found in {input_file}")
-print("-" * 32)
-for beat in beats:
-    print(f"{beat:0.2f}")
-
-print()
-print(f"Downbeats found in {input_file}")
-print("-" * 32)
-for downbeat in downbeats:
-    print(f"{downbeat:0.2f}")
+    resulting_beats = beats
+    if len(beats)/beats[-1] * 60 > 120:
+        print("Using only downbeats")
+        resulting_beats = downbeats
+    return resulting_beats
