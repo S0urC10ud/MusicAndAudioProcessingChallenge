@@ -2,7 +2,6 @@ import torch
 
 
 class BCFELoss(torch.nn.Module):
-    """ Binary cross-entropy false error. """
     def __init__(self):
         super(BCFELoss, self).__init__()
 

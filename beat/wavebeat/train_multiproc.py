@@ -29,20 +29,18 @@ def main():
     trainer = pl.Trainer(callbacks=[checkpoint_callback])
 
     train_dataset = BeatDataset("data/train/",
-                                audio_sample_rate=22050,
-                                target_factor=256,
-                                subset="train",
-                                augment=True,
-                                preload=True,
-                                length=2097152) # 65536*12
+                                sample_rate=22050,
+                                downsample_factor=256,
+                                data_subset="train",
+                                preload_data=True,
+                                segment_length=2097152 )
 
     val_dataset = BeatDataset("data/train/",
-                                audio_sample_rate=22050,
-                                target_factor=256,
-                                subset="val",
-                                augment=False,
-                                preload=True,
-                                length=2097152)
+                                sample_rate=22050,
+                                downsample_factor=256,
+                                data_subset="val",
+                                preload_data=True,
+                                segment_length=2097152 )
 
     train_dataloader = torch.utils.data.DataLoader(train_dataset, 
                                                     shuffle=True,

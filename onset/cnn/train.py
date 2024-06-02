@@ -199,6 +199,11 @@ def train_model(train_files, wavfile_train_data, onset_train_data, test_files, w
             if curr_avg_f1_score > best_average_f1_score:
                 with open(f"cnn_output.dmp", "wb") as dmp_file:
                     dill.dump(model, dmp_file)
+                
+                model.cpu()
+                with open(f"cnn_output_cpu.dmp", "wb") as dmp_file:
+                    dill.dump(model, dmp_file)
+                model.cuda()
                 best_average_f1_score = curr_avg_f1_score
                 print("Saved new best model!")
             print({
