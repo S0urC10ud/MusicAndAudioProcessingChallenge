@@ -6,12 +6,12 @@ import java.util.List;
 
 public class Clustering {
 	
-	private static final double MAX_CLUSTER_WIDTH = 25. / 1000;
+	private final double maxClusterWidth;
 	
 	private List<IOICluster> clusters = new ArrayList<>();
 	
-	public static List<IOICluster> getClusters(double[] onsets) {
-		Clustering clustering = new Clustering();
+	public static List<IOICluster> getClusters(double[] onsets, double maxClusterWidth) {
+		Clustering clustering = new Clustering(maxClusterWidth);
 		clustering.createClusters(onsets);
 		clustering.mergeClusters();
 		clustering.calculateScores();
@@ -19,7 +19,8 @@ public class Clustering {
 	}
 	
 
-	private Clustering() {
+	private Clustering(double maxClusterWidth) {
+		this.maxClusterWidth = maxClusterWidth;
 	}
 	
 	
@@ -46,7 +47,7 @@ public class Clustering {
 		double bestClusterDifference = Double.POSITIVE_INFINITY;
 		for(IOICluster cluster : clusters){
 			double difference = Math.abs(cluster.getClusterInterval() - distance);
-			if(difference < bestClusterDifference && difference < MAX_CLUSTER_WIDTH){
+			if(difference < bestClusterDifference && difference < maxClusterWidth){
 				bestClusterDifference = difference;
 				bestCluster = cluster;
 			}
@@ -66,7 +67,7 @@ public class Clustering {
 					continue;
 				}
 				IOICluster secondCluster = clusters.get(j);
-				if(Math.abs(firstCluster.getClusterInterval() - secondCluster.getClusterInterval()) < MAX_CLUSTER_WIDTH){
+				if(Math.abs(firstCluster.getClusterInterval() - secondCluster.getClusterInterval()) < maxClusterWidth){
 					firstCluster.addCluster(secondCluster);
 					deletedClusters.set(j);
 				}
@@ -85,10 +86,10 @@ public class Clustering {
 		for(IOICluster firstCluster : clusters){
 			for(IOICluster secondCluster : clusters){
 				int n;
-				for(n = 1; n * firstCluster.getClusterInterval() < secondCluster.getClusterInterval() - MAX_CLUSTER_WIDTH; n++){
+				for(n = 1; n * firstCluster.getClusterInterval() < secondCluster.getClusterInterval() - maxClusterWidth; n++){
 					// just for calculating n
 				}
-				if(Math.abs(n * firstCluster.getClusterInterval() - secondCluster.getClusterInterval()) < MAX_CLUSTER_WIDTH){
+				if(Math.abs(n * firstCluster.getClusterInterval() - secondCluster.getClusterInterval()) < maxClusterWidth){
 					secondCluster.addToScore(calculateRawScoreFromIntegerMultiple(n) * firstCluster.getSize());
 				}
 			}

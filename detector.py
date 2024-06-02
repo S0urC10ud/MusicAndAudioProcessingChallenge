@@ -17,6 +17,10 @@ import json
 import numpy as np
 from scipy.io import wavfile
 import librosa
+
+import beat.autocorrelation
+import tempo.autocorrelation
+
 try:
     import tqdm
 except ImportError:
@@ -25,6 +29,7 @@ except ImportError:
 
 from onset import onset_detection, superflux
 from beat import ioi_history, autocorrelation
+from tempo import autocorrelation
 from beat.multiple_agents import multiple_agents
 
 
@@ -165,7 +170,9 @@ def detect_tempo(sample_rate, signal, fps, spect, magspect, melspect,
     # define the tempo, and returns half of that as a second guess.
     # this is not a useful solution at all, just a placeholder.
 
-    return autocorrelation.detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options)
+    # return multiple_agents.detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options)
+    # return autocorrelation.detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options)
+    return tempo.autocorrelation.detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options)
 
     # tempo = 60 / (onsets[1] - onsets[0])
     # return [tempo / 2, tempo]
@@ -178,9 +185,9 @@ def detect_beats(sample_rate, signal, fps, spect, magspect, melspect,
     Returns the positions of all beats in seconds.
     """
     
-    return multiple_agents.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
-    return ioi_history.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
-    # return autocorrelation.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
+    # return multiple_agents.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
+    # return ioi_history.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
+    return beat.autocorrelation.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
 
     # we only have a dumb dummy implementation here.
     # it returns every 10th onset as a beat.

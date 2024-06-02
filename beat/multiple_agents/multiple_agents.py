@@ -32,8 +32,35 @@ sock.connect(("localhost",1337))
 reset_plot = [False]
 cnt = [0]
 
+def detect_tempo(sample_rate: int, signal: npt.NDArray, fps: int, spect: npt.NDArray, magspect: npt.NDArray,
+                             melspect: npt.NDArray, odf_rate: int, odf: npt.NDArray, onsets: npt.NDArray, options) -> list[float]:
+
+    #beats = detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, None, options)
+    #distance = np.median(beats[1:]-beats[:-1])
+    #est_tempo = 60/distance
+    #if est_tempo>115:
+    #    second_tempo = est_tempo/2
+    #else:
+    #    second_tempo = est_tempo*2
+    #return [est_tempo, second_tempo]
+
+    sock.send(b'\x01') # beat tracking identification
+
+    sock.send(struct.pack("!i", len(onsets)))
+    sock.send(struct.pack(f'>{len(onsets)}d', *onsets))
+
+    sock.send(b'\x00')#sanity check byte
+
+
+    results =  read_double_array()
+    assert sock.recv(1) == b'\x00', "wrong sanity byte"
+
+    #assert len(results)==2, f"expected 2 results, got: {len(results)}"
+
+    return results
+
 def detect_beats(sample_rate: int, signal: npt.NDArray, fps: int, spect: npt.NDArray, magspect: npt.NDArray,
-                             melspect: npt.NDArray, odf_rate: int, odf: npt.NDArray, onsets: npt.NDArray, tempo: npt.NDArray, options):
+                             melspect: npt.NDArray, odf_rate: int, odf: npt.NDArray, onsets: npt.NDArray, tempo: npt.NDArray, options) -> npt.NDArray:
 
     if reset_plot[0]:
         reset_plot[0]=False
@@ -44,6 +71,8 @@ def detect_beats(sample_rate: int, signal: npt.NDArray, fps: int, spect: npt.NDA
         #    adaptive_threshold_window_size=odf_rate//1, required_max_window_size=odf_rate//5,
         #    delta=0.03, l=0.9, high_window_reduction_factor=1)
 
+
+        sock.send(b'\x00') # beat tracking identification
 
         sock.send(struct.pack("!i", len(onsets)))
 
@@ -57,31 +86,11 @@ def detect_beats(sample_rate: int, signal: npt.NDArray, fps: int, spect: npt.NDA
 
         sock.send(b'\x00')#sanity check byte
         
-        n_beats_tuple = struct.unpack("!i",sock.recv(4))
-        assert len(n_beats_tuple)==1
-        n_beats = n_beats_tuple[0]
-        assert n_beats>=0, "expect positive number of beats received"
-
-        if n_beats==0:
-            print("ERROR: no beats received")
-            options.plot=True
-            return onsets # for debugging
-
-        target_bytes = n_beats*8
-        received_data: list[float] = []
-        while target_bytes > 0:
-            received = sock.recv(target_bytes)
-            received_data += (struct.unpack(f'>{len(received)//8}d', received))
-            target_bytes -= len(received)
+        received_beats = np.array(read_double_array())
         
-        received_beats = np.array(received_data)
-        
-        assert len(received_beats)==n_beats, f"invalid number of beats received, expected {n_beats}, got {len(received_beats)}"
         #received_beats = struct.unpack(f'>{n_beats}d', received_data)
 
-        sanity = sock.recv(1)
-        if sanity != b'\x00':
-            raise ValueError("wrong sanity byte")
+        assert sock.recv(1) == b'\x00', "wrong sanity byte"
         #return onsets
         return np.array(received_beats)
     except struct.error as e:
@@ -91,4 +100,24 @@ def detect_beats(sample_rate: int, signal: npt.NDArray, fps: int, spect: npt.NDA
         reset_plot[0]=True
         return onsets # for debugging
 
+def read_double_array() -> list[float]:
+    n_beats_tuple = struct.unpack("!i",sock.recv(4))
+    assert len(n_beats_tuple)==1
+    n_beats = n_beats_tuple[0]
+    assert n_beats>=0, "expect positive number of beats received"
+
+    if n_beats==0:
+        print("ERROR: no beats received")
+        options.plot=True
+        return onsets # for debugging
+
+    target_bytes = n_beats*8
+    received_data: list[float] = []
+    while target_bytes > 0:
+        received = sock.recv(target_bytes)
+        received_data += (struct.unpack(f'>{len(received)//8}d', received))
+        target_bytes -= len(received)
     
+    assert len(received_data)==n_beats, f"invalid number of beats received, expected {n_beats}, got {len(received_beats)}"
+
+    return received_data

@@ -12,75 +12,77 @@ def get_lag_range(fps):
     return min_lag, max_lag
 
 
-def find_peaks(auto_correlation, threshold=0):
+def compute_lag_of_bpm_lag(autocorr, fps):
+    min_lag, max_lag = get_lag_range(fps)
+    highest_peal_lag = find_highest_peak(autocorr[min_lag:max_lag])
+    return highest_peal_lag + min_lag
+
+
+def lag_to_time(lag, fps):
+    return lag / fps
+
+
+def find_highest_peak(signal, threshold=0):
     peaks = []
-    for i in range(1, len(auto_correlation) - 1):
-        if auto_correlation[i] > auto_correlation[i - 1] and auto_correlation[i] > auto_correlation[i + 1] and \
-                auto_correlation[i] > threshold:
+    for i in range(1, len(signal) - 1):
+        if signal[i] > signal[i - 1] and signal[i] > signal[i + 1] and signal[i] > threshold:
             peaks.append(i)
-    return np.array(peaks)
 
-
-def compute_autocorrelation(odf):
-    full_autocorrelation = np.correlate(odf, odf, mode='full')
-    return full_autocorrelation[len(full_autocorrelation) // 2:]
-
-
-def compute_bpm_estimate(peaks, autocorr, fps, min_lag):
-    # NOTE: there are cases where the odf has a hard time detecting onsets resulting in no peaks from the autocorr
-    # Hot-Fix: just return a default BPM
+    peaks = np.array(peaks)
     if len(peaks) == 0:
-        return (MAX_BPM + MIN_BPM) // 2
+        return len(signal) // 2
+    else:
+        highest_peak_index = np.argmax(signal[peaks])
+        highest_peak_lag_value = np.where(signal == signal[peaks[highest_peak_index]])[0][0]
+        return highest_peak_lag_value
 
-    highest_peak = np.argmax(autocorr[peaks])
-    highest_peak_lag = np.where(autocorr == autocorr[peaks[highest_peak]])[0][0]
-    # print(highest_peak_lag + min_lag)
 
-    estimated_bpm = 60 / (highest_peak_lag + min_lag) * fps
-    return estimated_bpm
+def compute_time_offset(onsets, first_beat_timestamp):
+    max_min_onset = onsets[0]
 
+    for i in range(1, len(onsets)):
+        if onsets[i] < first_beat_timestamp:
+            max_min_onset = onsets[i]
+        else:
+            break
+
+    return first_beat_timestamp - max_min_onset
+
+def find_max_smallest_onset(onsets, time_stamp):
+    max_min_onset = onsets[0]
+    for i in range(1, len(onsets)):
+        if onsets[i] < time_stamp:
+            max_min_onset = onsets[i]
+        else:
+            break
+    return max_min_onset
 
 def detect_beats(sample_rate, signal, fps, spect, magspect, melspec, odf_rate, odf, onsets, tempo, options):
-    min_lag, max_lag = get_lag_range(fps)
-    autocorr = compute_autocorrelation(odf)[min_lag:max_lag]
-    peaks = find_peaks(autocorr)
+    full_autcorr = np.correlate(odf, odf, mode='full')
+    full_autcorr = full_autcorr[len(full_autcorr) // 2:]
 
-    estimated_bpm = compute_bpm_estimate(peaks, autocorr, fps, min_lag)
-    beat_duration = 60 / estimated_bpm
+    bpm_lag = compute_lag_of_bpm_lag(full_autcorr, fps)
+    lag_window = 5
 
-    # get the largets onset value that is still lower than the beat duration
-    smaller_onsets = onsets[onsets < beat_duration]
-    if len(smaller_onsets) == 0:
-        start_onset = beat_duration
-    else:
-        start_onset = np.max(smaller_onsets)
+    beat_lags = []
+    expected_num_beats = len(full_autcorr) // bpm_lag   # Note: the last beat does not get captured yet
+    for i in range(1, expected_num_beats + 1):
+        expected_lag_center = i * bpm_lag
+        peak_lag = find_highest_peak(full_autcorr[expected_lag_center - lag_window:expected_lag_center + lag_window])
 
-    beats = list([start_onset])
-    next_predicted_beat = start_onset + beat_duration
-    error_margin = 0.1
+        beat_lag = peak_lag + expected_lag_center - lag_window
+        beat_lags.append(beat_lag)
 
-    while next_predicted_beat < onsets[-1]:
-        # check if we can find an onset that roughly matches with our next beat prediction
-        onsets_on_beat_prediction = [value for value in onsets if
-                                     next_predicted_beat - error_margin <= value <= next_predicted_beat + error_margin
-                                     and value not in beats]  # avoid endless loops by excluding values we have in the beats already
+    beat_lags.append(beat_lags[-1] + bpm_lag)
+    beat_lags = np.array(beat_lags)
+    beat_timestamps = np.array([lag_to_time(lag, fps) for lag in beat_lags])
 
-        if len(onsets_on_beat_prediction) == 0:
-            beats.append(next_predicted_beat)
-            next_predicted_beat = next_predicted_beat + beat_duration
-        else:
-            aligned_onset = onsets_on_beat_prediction[0]
-            beats.append(aligned_onset)
-            next_predicted_beat = next_predicted_beat + beat_duration
+    # Shifting the extracted beats so that they align with onsets
+    # Nice idea but does not work
+    # time_correction = compute_time_offset(onsets, beat_timestamps[0])
+    # corrected_beat_timestamps = beat_timestamps - time_correction
+    # return corrected_beat_timestamps
 
-    return beats
-
-
-def detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options):
-    min_lag, max_lag = get_lag_range(fps)
-    autocorr = compute_autocorrelation(odf)[min_lag:max_lag]
-    peaks = find_peaks(autocorr)
-
-    # Maybe we can improve by return the highest peak left of the first one
-    estimated_bpm = compute_bpm_estimate(peaks, autocorr, fps, min_lag)
-    return [estimated_bpm / 2, estimated_bpm]
+    # Snap the extracted beat locations to the onsets
+    snapped_beat_timestamps = np.array([find_max_smallest_onset(onsets, beat_timestamp) for beat_timestamp in beat_timestamps])
+    return snapped_beat_timestamps

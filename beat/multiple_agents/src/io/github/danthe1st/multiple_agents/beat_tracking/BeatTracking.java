@@ -9,10 +9,10 @@ import java.util.stream.IntStream;
 import io.github.danthe1st.multiple_agents.OnsetInformation;
 
 public class BeatTracking {
-	private static final double TIMEOUT = 5.6;// TODO no default in paper?
+	private static final double TIMEOUT = 5.6;
 	private static final double STARTUP_PERIOD = 10;
 	private static final double TOLERANCE_INNER = 40. / 1000;
-	private static final double CORRELATION_FACTOR = 35;// TODO no default in paper?
+	private static final double CORRELATION_FACTOR = 35;
 	
 	private List<Agent> agents = new ArrayList<>();
 	private final double[] onsets;
@@ -90,7 +90,6 @@ public class BeatTracking {
 				agent.increaseBeatInterval(error / CORRELATION_FACTOR);
 				agent.setPrediction(onsetTime);
 				agent.increasePrediction();
-				agent.setLastAction(onsetTime);
 				agent.increaseScore((1 - relativeError / 2) * odfValue);
 			}
 		}

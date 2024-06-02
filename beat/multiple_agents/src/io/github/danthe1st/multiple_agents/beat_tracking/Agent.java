@@ -28,16 +28,13 @@ public class Agent {
 		return history.getLast();
 	}
 	
-	public void setLastAction(double lastAction) {
-		history.add(lastAction);
-	}
-	
 	public double getPrediction() {
 		return prediction;
 	}
 	
 	public void setPrediction(double prediction) {
 		this.prediction = prediction;
+		history.add(prediction);
 	}
 	
 	public void increasePrediction() {
