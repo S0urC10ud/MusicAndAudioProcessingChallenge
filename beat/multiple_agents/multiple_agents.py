@@ -52,7 +52,7 @@ def detect_tempo(sample_rate: int, signal: npt.NDArray, fps: int, spect: npt.NDA
     sock.send(b'\x00')#sanity check byte
 
 
-    results =  read_double_array()
+    results =  read_double_array(options)
     assert sock.recv(1) == b'\x00', "wrong sanity byte"
 
     #assert len(results)==2, f"expected 2 results, got: {len(results)}"
@@ -86,7 +86,7 @@ def detect_beats(sample_rate: int, signal: npt.NDArray, fps: int, spect: npt.NDA
 
         sock.send(b'\x00')#sanity check byte
         
-        received_beats = np.array(read_double_array())
+        received_beats = np.array(read_double_array(options))
         
         #received_beats = struct.unpack(f'>{n_beats}d', received_data)
 
@@ -100,7 +100,7 @@ def detect_beats(sample_rate: int, signal: npt.NDArray, fps: int, spect: npt.NDA
         reset_plot[0]=True
         return onsets # for debugging
 
-def read_double_array() -> list[float]:
+def read_double_array(options) -> list[float]:
     n_beats_tuple = struct.unpack("!i",sock.recv(4))
     assert len(n_beats_tuple)==1
     n_beats = n_beats_tuple[0]
