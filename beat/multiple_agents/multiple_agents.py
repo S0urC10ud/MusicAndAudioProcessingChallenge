@@ -35,14 +35,21 @@ cnt = [0]
 def detect_tempo(sample_rate: int, signal: npt.NDArray, fps: int, spect: npt.NDArray, magspect: npt.NDArray,
                              melspect: npt.NDArray, odf_rate: int, odf: npt.NDArray, onsets: npt.NDArray, options) -> list[float]:
 
-    #beats = detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, None, options)
-    #distance = np.median(beats[1:]-beats[:-1])
-    #est_tempo = 60/distance
-    #if est_tempo>115:
-    #    second_tempo = est_tempo/2
-    #else:
-    #    second_tempo = est_tempo*2
-    #return [est_tempo, second_tempo]
+    beats = detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, None, options)
+    distance = np.median(beats[1:]-beats[:-1])
+    est_tempo = 60/distance
+    while est_tempo>200:
+        #print(est_tempo)
+        est_tempo/=2
+    while est_tempo<60:
+        #print(est_tempo)
+        est_tempo*=2
+        
+    if est_tempo>115:
+        second_tempo = est_tempo/2
+    else:
+        second_tempo = est_tempo*2
+    return [est_tempo, second_tempo]
 
     sock.send(b'\x01') # beat tracking identification
 
