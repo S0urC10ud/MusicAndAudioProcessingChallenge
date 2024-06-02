@@ -12,7 +12,7 @@ public class BeatTracking {
 	private static final double TIMEOUT = 5.6;
 	private static final double STARTUP_PERIOD = 10;
 	private static final double TOLERANCE_INNER = 40. / 1000;
-	private static final double CORRELATION_FACTOR = 35;
+	private static final double CORRELATION_FACTOR = 60;
 	
 	private List<Agent> agents = new ArrayList<>();
 	private final double[] onsets;
