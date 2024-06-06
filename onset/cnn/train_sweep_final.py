@@ -139,7 +139,7 @@ def train_model(train_files, wavfile_train_data, onset_train_data, test_files, w
     model.cuda()
     optimizer = torch.optim.Adam(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
 
-    for epoch in range(config.epochs):
+    for epoch in range(2401):
         total_train_loss = 0
         model.train()
         all_train_preds, all_train_targets = [], []
@@ -202,6 +202,8 @@ def train_model(train_files, wavfile_train_data, onset_train_data, test_files, w
             }
             print(log_dict)
             wandb.log(log_dict)
+            if epoch >= 1000 and curr_avg_f1_score < .7:
+                return
 
 reload_data = True
 

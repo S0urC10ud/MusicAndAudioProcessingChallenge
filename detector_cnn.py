@@ -130,7 +130,7 @@ def onset_detection_function(sample_rate, signal, fps, spect, magspect,
     where the onsets are. Returns the function values and its sample/frame
     rate in values per second as a tuple: (values, values_per_second)
     """
-    return perform_inference(signal, sample_rate), sample_rate / 441 # where 44 is the hop size
+    return perform_inference(signal, sample_rate), sample_rate / 220 # where 44 is the hop size
 
     # we only have a dumb dummy implementation here.
     # it returns every 1000th absolute sample value of the input signal.
@@ -145,7 +145,7 @@ def detect_onsets(odf_rate, odf, options):
     Detect onsets in the onset detection function.
     Returns the positions in seconds.
     """
-    threshold = 0.8
+    threshold = 0.92
     peaks=[]
     for ind in range(1,len(odf)-1):
         if (odf[ind]>threshold) and (odf[ind+1] < odf[ind] > odf[ind-1]):

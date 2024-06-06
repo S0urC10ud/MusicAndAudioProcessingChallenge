@@ -5,22 +5,22 @@ import librosa
 import torch.nn.functional as F
 import torch
 
-
 cnn_config = DotAccessibleDict({
-    'hop_length': 441,
-    'conv1_kernel_size': (3,7),
-    'conv2_kernel_size': (3,3),
-    'conv2_dimensions': 20,
-    'conv_out_dimensions': 10,
-    'linear_out': 256,
+    'hop_length': 220,
+    'conv1_kernel_size': (2,2),
+    'conv2_kernel_size': (1,2),
+    'conv2_dimensions': 50,
+    'conv_out_dimensions': 20,
+    'linear_out': 150,
     'n_mels': 80,
-    'learning_rate': 0.001,
-    'batch_size': 256,
-    "pool_size_1": [3,1],
+    'learning_rate': 0.0001,
+    'batch_size': 32,
+    "pool_size_1": [2,2],
     "pool_size_2": [3,1],
-    "weight_decay": 0.0001,
-    "dropout":0,
-    "epochs": 5000,
+    "weight_decay": 0.,
+    "dropout":0.01,
+    "epochs": 10000,
+    "sample_delta":14
 })
 
 
@@ -47,7 +47,7 @@ def perform_inference(signal, sample_rate):
 
         return torch.tensor(stacked_spectrograms, dtype=torch.float32)
     
-    def evaluate_model_on_full_file(model, audio_tensor, step_offset=7):
+    def evaluate_model_on_full_file(model, audio_tensor, step_offset):
         model.eval()
         num_chunks = audio_tensor.shape[2]
         predictions = np.zeros(num_chunks)
@@ -61,5 +61,5 @@ def perform_inference(signal, sample_rate):
         return np.array(predictions)
     
     audio_tensor = prepare_data(signal, sample_rate)
-    predictions = evaluate_model_on_full_file(model, audio_tensor)
+    predictions = evaluate_model_on_full_file(model, audio_tensor, cnn_config.sample_delta)
     return predictions

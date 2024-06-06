@@ -87,7 +87,7 @@ def process_file(file_path, model):
 
         return torch.tensor(stacked_spectrograms, dtype=torch.float32), sample_rate
 
-    def evaluate_model_on_full_file(model, audio_tensor, step_offset=7):
+    def evaluate_model_on_full_file(model, audio_tensor, step_offset):
         model.eval()
         num_chunks = audio_tensor.shape[2]
         predictions = np.zeros(num_chunks)
@@ -115,7 +115,7 @@ def process_file(file_path, model):
     audio_tensor, sample_rate = full_file_dataset(file_path)
     onset_labels = load_correct_labels(file_path.replace(".wav", ".onsets.gt"), audio_tensor.shape[2], config.hop_length / sample_rate)
 
-    predictions = evaluate_model_on_full_file(model, audio_tensor)
+    predictions = evaluate_model_on_full_file(model, audio_tensor, config.sample_delta)
     model.train()
     density_factor = (config.hop_length / sample_rate)
     return predictions, onset_labels, np.argwhere(onset_labels==1).flatten() * density_factor, density_factor
@@ -129,8 +129,8 @@ def post_process(detection_function, threshold, density_factor):
 
 def train_model(train_files, wavfile_train_data, onset_train_data, test_files, wavfile_test_data, onset_test_data, config, epochs=3500):
     global best_average_f1_score
-    train_dataset = OnsetDetectionDataset(train_files, wavfile_train_data, onset_train_data, sample_delta=7, n_mels=config.n_mels, hop_length=config.hop_length)
-    test_dataset = OnsetDetectionDataset(test_files, wavfile_test_data, onset_test_data, sample_delta=7, n_mels=config.n_mels, hop_length=config.hop_length, onset_one_in=8)
+    train_dataset = OnsetDetectionDataset(train_files, wavfile_train_data, onset_train_data, sample_delta=config.sample_delta, n_mels=config.n_mels, hop_length=config.hop_length)
+    test_dataset = OnsetDetectionDataset(test_files, wavfile_test_data, onset_test_data, sample_delta=config.sample_delta, n_mels=config.n_mels, hop_length=config.hop_length, onset_one_in=8)
 
     # Use a higher number of workers and enable pin_memory for faster host to GPU transfers
     train_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0, pin_memory=True)
@@ -166,21 +166,17 @@ def train_model(train_files, wavfile_train_data, onset_train_data, test_files, w
         train_confusion_mat = confusion_matrix(all_train_targets, all_train_preds)
 
         model.eval()
-        total_test_loss = 0
-        all_test_preds, all_test_targets = [], []
-
-
         # avg_test_loss = total_test_loss / len(test_loader)
         # test_accuracy = accuracy_score(all_test_targets, all_test_preds)
         # test_confusion_mat = confusion_matrix(all_test_targets, all_test_preds)
         # Save the model periodically or at certain epochs
-        if (epoch+1) % 500 == 0:
+        if (epoch+1) % 200 == 0:
             print("-"*40)
             print(f'Epoch {epoch+1}, Train Loss: {avg_train_loss:.4f}, Train Accuracy: {train_accuracy:.4f}')# Test Loss: {avg_test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}')
             print("Train Confusion Matrix:\n", train_confusion_mat)
             with torch.no_grad():
                 file_paths =['data/train_extra_onsets/ah_development_percussion_castagnet1.wav', 'data/train_extra_onsets/Media-105407(6.0-16.0).wav', 'data/train_extra_onsets/Media-104105(15.6-25.6).wav', 'data/train_extra_onsets/Media-106003(0.2-10.2).wav', 'data/train_extra_onsets/lame_velvet.wav', 'data/train_extra_onsets/ah_test_oud_Diverse_-_03_-_Muayyer_Kurdi_Taksim.wav', 'data/train_extra_onsets/Media-106001(9.7-19.7).wav', 'data/train_extra_onsets/ah_test_kemence_22_NevaTaksim_Kemence.wav', 'data/train_extra_onsets/SoundCheck2_60_Vocal_Tenor_opera.wav', 'data/train_extra_onsets/SoundCheck2_83_The_Alan_Parsons_Project_-_Limelight.wav', 'data/train_extra_onsets/ah_development_piano_MOON.wav', 'data/train_extra_onsets/lame_ftb_samp.wav', 'data/train_extra_onsets/Media-104306(5.0-15.0).wav', 'data/train_extra_onsets/train13.wav', 'data/train_extra_onsets/jpb_jaxx.wav', 'data/train_extra_onsets/gs_mix2_10dB.wav', 'data/train_extra_onsets/jpb_PianoDebussy.wav', 'data/train_extra_onsets/ff123_BigYellow.wav', 'data/train_extra_onsets/api_3-you_think_too_muchb.wav', 'data/train_extra_onsets/Media-105819(8.1-18.1).wav', 'data/train_extra_onsets/ff123_kraftwerk.wav', 'data/train_extra_onsets/vorbis_lalaw.wav', 'data/train_extra_onsets/ah_development_piano_autumn.wav', 'data/train_extra_onsets/Media-104111(5.0-15.0).wav', 'data/train_extra_onsets/ah_test_sax_Tubby_Hayes_-_The_Eighth_Wonder_-_11_-_Unidentified_12_Bar_Theme_pt1.wav', 'data/train_extra_onsets/ff123_Debussy.wav', 'data/train_extra_onsets/train8.wav', 'data/train_extra_onsets/ff123_BlueEyesExcerpt.wav']
-                thresholds = [0.1, 0.25, 0.5, 0.7, 0.8, 0.85, 0.87, 0.9, 0.92, 0.95, 0.98]
+                thresholds = [0.1, 0.25, 0.5, 0.7, 0.75, 0.8, 0.82, 0.85, 0.87, 0.9, 0.92, 0.93, 0.95, 0.97, 0.98, 0.99]
                 f1_scores = np.zeros((len(file_paths), len(thresholds)))
                 for fid, file_path in enumerate(file_paths):
                     detection_function, onset_labels, onset_times, density_factor = process_file(file_path, model)
@@ -214,23 +210,24 @@ def train_model(train_files, wavfile_train_data, onset_train_data, test_files, w
             })
 
 current_config = DotAccessibleDict({
-    'hop_length': 441,
-    'conv1_kernel_size': (3,7),
-    'conv2_kernel_size': (3,3),
-    'conv2_dimensions': 20,
-    'conv_out_dimensions': 10,
-    'linear_out': 256,
+    'hop_length': 220,
+    'conv1_kernel_size': (2,2),
+    'conv2_kernel_size': (1,2),
+    'conv2_dimensions': 50,
+    'conv_out_dimensions': 20,
+    'linear_out': 150,
     'n_mels': 80,
-    'learning_rate': 0.001,
-    'batch_size': 256,
-    "pool_size_1": [3,1],
+    'learning_rate': 0.0001,
+    'batch_size': 32,
+    "pool_size_1": [2,2],
     "pool_size_2": [3,1],
-    "weight_decay": 0.0001,
-    "dropout":0,
-    "epochs": 5000,
+    "weight_decay": 0.,
+    "dropout":0.01,
+    "epochs": 10000,
+    "sample_delta":14
 })
 
-reload_data = False
+reload_data = True
 
 def run_train():
     train_files, test_files = train_test_split('data/train_extra_onsets/', test_size=0.1, seed=42)
