@@ -9,14 +9,12 @@ For usage information, call with --help.
 Author: Jan Schlüter
 """
 
-import sys
 from pathlib import Path
 from argparse import ArgumentParser
 import json
 from onset.cnn.inference import perform_inference
 import numpy as np
 from scipy.io import wavfile
-import scipy
 
 import librosa
 try:
@@ -25,8 +23,8 @@ except ImportError:
     tqdm = None
 
 
-from onset import onset_detection
-from beat import ioi_history
+from onset import superflux
+from tempo import autocorrelation, ioi_history
 
 
 def opts_parser():
@@ -188,11 +186,16 @@ def detect_tempo(sample_rate, signal, fps, spect, magspect, melspect,
     # it uses the time difference between the first two onsets to
     # define the tempo, and returns half of that as a second guess.
     # this is not a useful solution at all, just a placeholder.
-    if len(onsets) < 2:
-        return [120.0, 60.0]
-    tempo = 60 / (onsets[1] - onsets[0])
-    return [tempo / 2, tempo]
+    # if len(onsets) < 2:
+    #     return [120.0, 60.0]
+    # tempo = 60 / (onsets[1] - onsets[0])
+    # return [tempo / 2, tempo]
 
+    # use superflux onset-detection as it is best for tempo estimation via autocorrelation which works best so far
+    odf, odf_rate = superflux.onset_detection_function(sample_rate, signal, fps, spect, magspect, melspect, options)
+    return autocorrelation.detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options)
+
+    # return ioi_history.detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options)
 
 def detect_beats(sample_rate, signal, fps, spect, magspect, melspect,
                  odf_rate, odf, onsets, tempo, options):

@@ -9,7 +9,6 @@ For usage information, call with --help.
 Author: Jan Schlüter
 """
 
-import sys
 from pathlib import Path
 from argparse import ArgumentParser
 import json
@@ -28,8 +27,8 @@ except ImportError:
 
 
 from onset import onset_detection, superflux
-from beat import ioi_history, autocorrelation
-from tempo import autocorrelation
+from beat import autocorrelation
+from tempo import autocorrelation, ioi_history, tempogram
 from beat.multiple_agents import multiple_agents
 
 
@@ -171,8 +170,8 @@ def detect_tempo(sample_rate, signal, fps, spect, magspect, melspect,
     # this is not a useful solution at all, just a placeholder.
 
     # return multiple_agents.detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options)
-    # return autocorrelation.detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options)
     return tempo.autocorrelation.detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options)
+    # return tempo.tempogram.detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options)
 
     # tempo = 60 / (onsets[1] - onsets[0])
     # return [tempo / 2, tempo]
