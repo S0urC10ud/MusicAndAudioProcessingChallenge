@@ -23,9 +23,9 @@ except ImportError:
     tqdm = None
 
 
-from onset import superflux
+from onset import superflux, onset_detection
 from tempo import autocorrelation, ioi_history
-
+from beat.multiple_agents import multiple_agents
 
 def opts_parser():
     usage =\
@@ -186,10 +186,11 @@ def detect_tempo(sample_rate, signal, fps, spect, magspect, melspect,
     # it uses the time difference between the first two onsets to
     # define the tempo, and returns half of that as a second guess.
     # this is not a useful solution at all, just a placeholder.
-    # if len(onsets) < 2:
-    #     return [120.0, 60.0]
-    # tempo = 60 / (onsets[1] - onsets[0])
-    # return [tempo / 2, tempo]
+    return multiple_agents.detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options)
+    #if len(onsets) < 2:
+    #    return [120.0, 60.0]
+    #tempo = 60 / (onsets[1] - onsets[0])
+    #return [tempo / 2, tempo]
 
     # use superflux onset-detection as it is best for tempo estimation via autocorrelation which works best so far
     odf, odf_rate = superflux.onset_detection_function(sample_rate, signal, fps, spect, magspect, melspect, options)
@@ -203,6 +204,9 @@ def detect_beats(sample_rate, signal, fps, spect, magspect, melspect,
     Detect beats using any of the input representations.
     Returns the positions of all beats in seconds.
     """
+    #return onsets
+    return multiple_agents.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
+
     if len(onsets) < 2:
         return np.array([1.0,2.0]) # TODO: different strategy for beat detection needed @Daniel
     return ioi_history.detect_beats(sample_rate, signal, fps, spect, magspect, melspect,

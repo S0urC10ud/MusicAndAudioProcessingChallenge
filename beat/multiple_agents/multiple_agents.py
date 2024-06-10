@@ -5,6 +5,7 @@ import socket
 import struct
 import traceback
 
+import sys
 
 #from sys import path
 #from os.path import dirname as dir
@@ -85,6 +86,14 @@ def detect_beats(sample_rate: int, signal: npt.NDArray, fps: int, spect: npt.NDA
 
         odf_indices = np.array(onsets*odf_rate, int)
         odf_values = odf[odf_indices]
+
+        # inverse sigmoid
+        #odf_values = np.log(odf_values / (1 - odf_values))
+
+        # normalization ODF values
+        if "cnn" in sys.argv[0]: # should only happen for CNN data
+            print("CNN")
+            odf_values = (odf_values-np.min(odf_values))/(np.max(odf_values)-np.min(odf_values))
 
         #odf_values = np.log(odf_values+1)
 
