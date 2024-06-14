@@ -1,6 +1,5 @@
-from beat.wavebeat.loss import BCFELoss
-from beat.wavebeat.eval import evaluate, find_beats
-from beat.wavebeat.plot import plot_activations, make_table, plot_histogram
+from loss import BCFELoss
+from eval import evaluate, find_beats
 import torch
 from argparse import ArgumentParser
 import os
@@ -199,14 +198,6 @@ class Base(pl.LightningModule):
         self.log('val_loss/Joint F-measure', torch.tensor(np.mean([beat_f_measure,downbeat_f_measure])))
 
 
-        self.logger.experiment.add_text("perf", 
-                                        make_table(songs),
-                                        self.global_step)
-    
-        self.logger.experiment.add_image(f"hist/F-measure",
-                                         plot_histogram(songs),
-                                         self.global_step)
- 
         for idx, rand_idx in enumerate(list(rand_indices)):
             i = outputs["input"][rand_idx].squeeze()
             t = outputs["target"][rand_idx].squeeze()
@@ -233,17 +224,6 @@ class Base(pl.LightningModule):
                                              i, self.global_step, 
                                              sample_rate=22050)
 
-            # log beats plots
-            self.logger.experiment.add_image(f"act/{idx}",
-                                             plot_activations(ref_beats, 
-                                                              est_beats, 
-                                                              est_sm,
-                                                              self.target_sample_rate,
-                                                              ref_downbeats=ref_downbeats,
-                                                              est_downbeats=est_downbeats,
-                                                              est_downbeats_sm=est_downbeat_sm,
-                                                              song_name=f),
-                                             self.global_step)
 
             if self.save_dir is not None:
                 if not os.path.isdir(self.save_dir):

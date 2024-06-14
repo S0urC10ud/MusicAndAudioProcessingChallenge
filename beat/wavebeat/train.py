@@ -50,5 +50,6 @@ val_dataloader = torch.utils.data.DataLoader(val_dataset,
                                             pin_memory=False)    
 
 model = dsTCNModel()
+model.cuda()
 torchsummary.summary(model, [(1,65536)], device="cpu")
 trainer.fit(model, train_dataloader, val_dataloader)

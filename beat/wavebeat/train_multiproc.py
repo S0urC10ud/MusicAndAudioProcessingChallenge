@@ -33,14 +33,14 @@ def main():
                                 downsample_factor=256,
                                 data_subset="train",
                                 preload_data=True,
-                                segment_length=2097152 )
+                                segment_length=2097152)
 
     val_dataset = BeatDataset("data/train/",
                                 sample_rate=22050,
                                 downsample_factor=256,
                                 data_subset="val",
                                 preload_data=True,
-                                segment_length=2097152 )
+                                segment_length=2097152)
 
     train_dataloader = torch.utils.data.DataLoader(train_dataset, 
                                                     shuffle=True,
@@ -56,7 +56,7 @@ def main():
     # create the model with args
     model = dsTCNModel()
     model = dsTCNModel.load_from_checkpoint("pretrained/wavebeat_epoch=98-step=24749.ckpt")
-
+    model.cuda()
     # summary 
     torchsummary.summary(model, [(1,65536)], device="cpu")
 

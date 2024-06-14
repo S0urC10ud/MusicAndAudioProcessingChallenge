@@ -40,10 +40,6 @@ def opts_parser():
     parser.add_argument('outfile',
             type=str,
             help='Output JSON file to write.')
-    parser.add_argument('--threshold',
-            type=float,
-            help='Threshold for onset detection',
-            default=0.73)
     parser.add_argument('--plot',
             action='store_true',
             help='If given, plot something for every file processed.')
@@ -152,31 +148,6 @@ def detect_onsets(odf_rate, odf, options):
             peaks.append(ind)
     return np.array(peaks) / odf_rate
     
-
-def detect_onsets_old(odf_rate, odf, options):
-    """
-    Detect onsets in the onset detection function.
-    Returns the positions in seconds.
-    """
-    peaks = []
-    potential_peak = None
-    for i in range(len(odf)):
-        if odf[i] > options.threshold: # threshold
-            if potential_peak is None or odf[i] > odf[potential_peak]:
-                potential_peak = i
-        if potential_peak is not None and i >= potential_peak + 25: # getting out of the min distance window of 15
-            peaks.append(potential_peak)
-            potential_peak = None
-    if potential_peak is not None:
-        peaks.append(potential_peak)
-    #width = 30
-    #flattened_detection_fn = np.convolve(odf, np.ones(width), mode="same")
-    #flattened_detection_fn = np.convolve(flattened_detection_fn, np.ones(width), mode="same")
-    #flattened_detection_fn = np.convolve(flattened_detection_fn, np.ones(width), mode="same")
-    #flattened_detection_fn /= np.max(flattened_detection_fn)
-    #return scipy.signal.find_peaks(flattened_detection_fn, distance = 50, prominence=options.threshold, wlen=50)[0] / odf_rate
-    return np.array(peaks) / odf_rate
-
 
 def detect_tempo(sample_rate, signal, fps, spect, magspect, melspect,
                  odf_rate, odf, onsets, options):
