@@ -10,10 +10,10 @@ import org.json.JSONObject;
 
 public class JsonMerger {
 	
-	private static final Path TARGET_PATH = Path.of("/../data/merged.json");
-	private static final Path ONSET_PATH = Path.of("/../final_final_cnn_predictions.pd");
-	private static final Path BEAT_PATH = Path.of("/../test_this_is_the_beat.json");
-	private static final Path TEMPO_PATH = Path.of("/../data/tempo.json");
+	private static final Path TARGET_PATH = Path.of("/../merged.json");
+	private static final Path ONSET_PATH = Path.of("/../train_cnn.json");
+	private static final Path BEAT_PATH = Path.of("/../train.json");
+	private static final Path TEMPO_PATH = Path.of("/../train.json");
 	
 	public static void main(String[] args) throws IOException {
 		JSONObject onsetData = read(ONSET_PATH);

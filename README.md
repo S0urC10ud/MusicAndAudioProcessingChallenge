@@ -1,37 +1,64 @@
-Audio and Music Processing Challenge Template
-=============================================
+# Audio-and-Music-Processing Team V
+In this document we provide the necessary info to run the individual implementations.
 
-This provides two Python scripts that may serve as a template for your submission to the onset detection, beat detection and tempo estimation challenges. Usage is completely optional.
 
-`detector.py`
--------------
+### CNN
+For evaluation, the file `detector_cnn.py` can be used with the default `detector.py`-usage. For training, the directory `onsets/cnn` should be examined where `train.py` holds the final (best) hyperparameters. If some additional hyperparameter-tuning has to be done, `train_sweep_final.py` in this directory can be examined. The pre-trained models are `cnn_output_cpu.dmp` and `cnn_output.dmp` in the root directory respectively for cuda.
 
-Takes two arguments: A directory of `.wav` files to process, and the file name of a `.json` file to write the predictions to. Optionally takes the `--plot` argument to visualize computed features and predictions for each file as they are processed.
+### Wavebeat
+Regarding the inference, `detector_wavebeat.py` can be utilized (again with the default usage - for example `python detector_wavebeat.py data/test test_wavbeat_preds.pd`). For the training, the directory `beat/wavbeat` should be examined where pytorch lightning is used for the training loop. 
 
-Requires `numpy`, `scipy`, `librosa`, optionally `tqdm` for a progress bar, and optionally `matplotlib` for the visualization.
+For training, the first two lines of `model.py` have to be adjusted as follows (but then inference will not work):
+```py
+from loss import BCFELoss
+from eval import evaluate, find_beats
+```
 
-You can read the file from top to bottom. It includes a function `detect_everything()` that computes a spectrogram and mel spectrogram, and then calls other functions to derive an onset detection function, detect onsets, estimate tempo, and detect beats. None of the latter functions do anything useful yet. It is your job to fill in some algorithms that work well. All functions have access to the command line parameters, so you can add parameters that you would like to alter from the command line or allow selecting different algorithms. Of course, feel free to change all parameters involved in the existing features, restructure the code, delete all the functions and write your `detect_everything()` function from scratch, or ignore this template altogether and write your own script or notebook.
+The default lines are:
+```py
+from beat.wavebeat.loss import BCFELoss
+from beat.wavebeat.eval import evaluate, find_beats
+```
 
-`evaluate.py`
--------------
+The file `train_multiproc.py` is the recommended script to perform the training which performed trainsfer-learning from the pre-trained model.
 
-Takes two arguments: The location of the ground truth and the location of the predictions. The ground truth can be a directory of `.onsets.gt`, `.tempo.gt` and `.beats.gt` files or a `.json` file. The predictions can be a directory of `.onsets.pr`, `.tempo.pr` and `.beats.pr` files or a `.json` file.
+When encountering issues, please contact [martin.dallinger@outlook.com](mailto:martin.dallinger@outlook.com).
 
-Requires `numpy` and `mir_eval` to run.
+### Multiple Agents
+In order to use the multiple agents approach for beat detection or tempo estimation, first run the Java program located in `beat/multiple_agents` in order to listen on port 1337. The main class is `io.github.danthe1st.multiple_agents.MultipleAgents`.
 
-You can use it to evaluate your predictions on the main training set (or a part of the training set that you set aside for validation) or the extra training sets. It should gracefully handle cases where not all three tasks are included in the ground truth or predictions. Beware that scores are always averaged over the number of ground truth files, no matter whether there is a corresponding prediction.
+The Java program can be compiled and run by executing the following commands in `beat/multiple_agents`:
 
-Suggested use
--------------
+```bash
+javac -d bin/ $(find src -name '*.java')
+java -cp bin/ io.github.danthe1st.multiple_agents.MultipleAgents
+```
 
-The idea would be for you to predict and evaluate on the training set, changing the implementation and tuning parameters as you go (think about setting aside a part of the training set for validation, especially if you are using machine learning approaches). When happy, run the prediction script over the test set and submit the resulting `.json` file to the challenge server.
+It is recommended to use Java 21.
+On Windows, it would be necessary to list all Java files for compilation:
+```bash
+javac -d bin src/io/github/danthe1st/multiple_agents/IO.java src/io/github/danthe1st/multiple_agents/clustering/IOICluster.java src/io/github/danthe1st/multiple_agents/clustering/Clustering.java src/io/github/danthe1st/multiple_agents/MultipleAgents.java src/io/github/danthe1st/multiple_agents/beat_tracking/BeatTracking.java src/io/github/danthe1st/multiple_agents/beat_tracking/Agent.java src/io/github/danthe1st/multiple_agents/OnsetInformation.java
+java -cp bin/ io.github.danthe1st.multiple_agents.MultipleAgents
+```
 
-For reference, running the dummy implementations of `detector.py` over the full training set (extracted to `train/`) and evaluating the results should look like this:
+## How to get predictions
+There are 2 detector scripts which only differe in how onsets and onset-detection-function are obtained: the first file called `detector.py` uses the superflux approach for onset-detection while the second file called `detector_cnn.py` uses a CNN-based approach. Other than that both files use the our best approaches for both beat detection and tempo estimation. However other methods for these tasks are also implemented in this code-base. In order to use them, simply comment-in or comment-out the approaches you want to use.  
+**Important:** If you intend to use Multiple Agents (which is the default for beat tracking), please read the section above. If you don't intend to use them (or don't want to install Java), just comment out its import *and* function-call.
+
+As the two detector files are based on the the provided template, they both require two inputs: one for a directory of `.wav` and another for the output JSON file
+
 ```
 $ ./detector.py train/ train.json
-$ ./evaluate.py train/ train.json
-Onsets F-score: 0.3688
-Tempo p-score: 0.0184
-Beats F-score: 0.1367
+$ ./detector_cnn.py train/ train_cnn.json
 ```
-This clearly leaves some room for improvement!
+
+
+## Merging JSON files
+In order to merge JSON files of multiple approaches together, a Java program in the `jsonmerge` directory can be used. This program requires [Maven 3](https://maven.apache.org/) and Java 21.
+
+Once these requirements are satisfied (make sure to set the `JAVA_HOME` to a Java 21 JDK), run the following command in the `jsonmerge` directory:
+```bash
+mvn compile exec:java -Dexec.mainClass=io.github.danthe1st.jsonmerge.JsonMerger
+```
+
+This merges the onsets from `train_cnn.json` with the beats and tempi from `train.json`.
