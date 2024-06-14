@@ -61,4 +61,4 @@ Once these requirements are satisfied (make sure to set the `JAVA_HOME` to a Jav
 mvn compile exec:java -Dexec.mainClass=io.github.danthe1st.jsonmerge.JsonMerger
 ```
 
-This merges the onsets from `train_cnn.json` with the beats and tempi from `train.json`.
+This merges the onsets from `train_cnn.json` with the beats and tempi from `train.json` into a file named `merged.json`.

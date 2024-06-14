@@ -23,11 +23,13 @@ out
 # Eclipse
 .project
 .classpath
+target
 
 # Python
 profile_default
 .venv
 venv
+.settings
 
 # ML stuff
 wandb/**
