@@ -23,7 +23,7 @@ except ImportError:
     tqdm = None
 
 
-from onset import superflux, onset_detection
+from onset import superflux, spectral_difference
 from tempo import autocorrelation, ioi_history
 from beat.multiple_agents import multiple_agents
 
