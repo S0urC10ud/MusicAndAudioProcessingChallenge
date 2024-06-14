@@ -184,7 +184,7 @@ def detect_beats(sample_rate, signal, fps, spect, magspect, melspect,
     Returns the positions of all beats in seconds.
     """
     
-    # return multiple_agents.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
+    return multiple_agents.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
     # return ioi_history.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
     return beat.autocorrelation.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
 
