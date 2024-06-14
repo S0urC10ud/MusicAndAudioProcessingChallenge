@@ -9,7 +9,6 @@ For usage information, call with --help.
 Author: Jan Schlüter
 """
 
-import sys
 from pathlib import Path
 from argparse import ArgumentParser
 import json
@@ -27,9 +26,9 @@ except ImportError:
     tqdm = None
 
 
-from onset import onset_detection, superflux
-from beat import ioi_history, autocorrelation
-from tempo import autocorrelation
+from onset import spectral_difference, superflux
+from beat import autocorrelation
+from tempo import autocorrelation, ioi_history, tempogram
 from beat.multiple_agents import multiple_agents
 
 
@@ -131,7 +130,7 @@ def onset_detection_function(sample_rate, signal, fps, spect, magspect,
     rate in values per second as a tuple: (values, values_per_second)
     """
     return superflux.onset_detection_function(sample_rate, signal, fps, spect, magspect,melspect, options)
-    return onset_detection.onset_detection_function(sample_rate, signal, fps, spect, magspect,melspect, options)
+    return spectral_difference.onset_detection_function(sample_rate, signal, fps, spect, magspect,melspect, options)
 
     # we only have a dumb dummy implementation here.
     # it returns every 1000th absolute sample value of the input signal.
@@ -149,7 +148,7 @@ def detect_onsets(odf_rate, odf, options):
     """
 
     return superflux.detect_onsets(odf_rate, odf, options)
-    return onset_detection.detect_onsets(odf_rate, odf, options)
+    return spectral_difference.detect_onsets(odf_rate, odf, options)
 
     # we only have a dumb dummy implementation here.
     # it returns the timestamps of the 100 strongest values.
@@ -171,8 +170,8 @@ def detect_tempo(sample_rate, signal, fps, spect, magspect, melspect,
     # this is not a useful solution at all, just a placeholder.
 
     # return multiple_agents.detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options)
-    # return autocorrelation.detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options)
     return tempo.autocorrelation.detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options)
+    # return tempo.tempogram.detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options)
 
     # tempo = 60 / (onsets[1] - onsets[0])
     # return [tempo / 2, tempo]
@@ -185,7 +184,7 @@ def detect_beats(sample_rate, signal, fps, spect, magspect, melspect,
     Returns the positions of all beats in seconds.
     """
     
-    # return multiple_agents.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
+    return multiple_agents.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
     # return ioi_history.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
     return beat.autocorrelation.detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, tempo, options)
 

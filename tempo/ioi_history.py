@@ -14,7 +14,7 @@ def compute_inter_distances(onsets):
     return np.array(inter_distances)
 
 
-def histogram_peak_picking(inter_distances):
+def histogram_peak_picking(inter_distances, plot=False):
     bpm_range = inter_distances[
         (inter_distances >= 0.3) & (inter_distances <= 1.0)]  # only get the values that lie within 200 bpm to 60 bpm
     hist, bins = np.histogram(bpm_range, bins=100)
@@ -50,3 +50,10 @@ def detect_beats(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, 
             next_predicted_beat = aligned_onset + highest_peak_value
 
     return beats
+
+def detect_tempo(sample_rate, signal, fps, spect, magspect, melspect, odf_rate, odf, onsets, options):
+    inter_distances = compute_inter_distances(onsets)
+    highest_peak_value = histogram_peak_picking(inter_distances, plot=True)
+
+    tempo_estimation = 60 / highest_peak_value
+    return [tempo_estimation / 2, tempo_estimation]

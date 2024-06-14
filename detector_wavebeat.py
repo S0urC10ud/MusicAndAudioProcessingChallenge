@@ -9,7 +9,6 @@ For usage information, call with --help.
 Author: Jan Schlüter
 """
 
-import sys
 from pathlib import Path
 from argparse import ArgumentParser
 import json
@@ -24,7 +23,7 @@ except ImportError:
 
 
 from onset import onset_detection, superflux
-from beat import ioi_history, autocorrelation
+from beat import autocorrelation
 from beat.wavebeat.model import dsTCNModel
 import glob
 import os

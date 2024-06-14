@@ -23,11 +23,13 @@ cnn_config = DotAccessibleDict({
     "sample_delta":14
 })
 
+import io
 
+import pickle
 def perform_inference(signal, sample_rate):
-    with open("cnn_output.dmp", "rb") as dmp_file:
+    with open("cnn_output_cpu.dmp", "rb") as dmp_file:
         model = dill.load(dmp_file)
-        model.cuda()
+        #model.cuda()
     def prepare_data(signal, sample_rate, n_fft=[4096, 2048, 1024], hop_length=cnn_config.hop_length, n_mels=cnn_config.n_mels):
         spectrograms = []
         #with open("onset/cnn/expected_mus.npy", "rb") as expected_vals_handle:
@@ -55,7 +57,7 @@ def perform_inference(signal, sample_rate):
             # Process audio in chunks of size `sample_length`
             for i in range(step_offset, num_chunks - step_offset - 1):
                 chunk = audio_tensor[:, :, i-step_offset : i + step_offset + 1]
-                output = model(chunk.unsqueeze(0).cuda())
+                output = model(chunk.unsqueeze(0))
                 predicted_prob = output.cpu().numpy()
                 predictions[i] = predicted_prob
         return np.array(predictions)

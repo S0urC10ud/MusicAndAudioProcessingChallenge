@@ -22,6 +22,7 @@ public class BeatTracking {
 		BeatTracking tracking = new BeatTracking(tempoHypothesis, piece);
 		tracking.perform();
 		Agent bestAgent = tracking.getBestAgent();
+		System.out.println("end with " + tracking.agents.size() + " agents");
 		System.out.println("interval at end: " + bestAgent.getBeatInterval());
 		return bestAgent.getHistory();
 	}
