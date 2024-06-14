@@ -57,8 +57,6 @@ def main():
     model = dsTCNModel()
     model = dsTCNModel.load_from_checkpoint("pretrained/wavebeat_epoch=98-step=24749.ckpt")
     model.cuda()
-    # summary 
-    torchsummary.summary(model, [(1,65536)], device="cpu")
 
     # train!
     trainer.fit(model, train_dataloader, val_dataloader)

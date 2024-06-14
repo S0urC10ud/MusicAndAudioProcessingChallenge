@@ -12,7 +12,6 @@ import sys
 #print(dir("../.."))
 #path.append(dir("../.."))
 
-from onset.onset_detection import find_onsets
 #from ...onset_detection import find_onsets
 
 

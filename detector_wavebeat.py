@@ -22,8 +22,6 @@ except ImportError:
     tqdm = None
 
 
-from onset import onset_detection, superflux
-from beat import autocorrelation
 from beat.wavebeat.model import dsTCNModel
 import glob
 import os
@@ -126,7 +124,7 @@ def onset_detection_function(sample_rate, signal, fps, spect, magspect,
     where the onsets are. Returns the function values and its sample/frame
     rate in values per second as a tuple: (values, values_per_second)
     """
-    return superflux.onset_detection_function(sample_rate, signal, fps, spect, magspect,melspect, options)
+    return [0.], 0.
     return onset_detection.onset_detection_function(sample_rate, signal, fps, spect, magspect,melspect, options)
 
     # we only have a dumb dummy implementation here.
@@ -144,7 +142,7 @@ def detect_onsets(odf_rate, odf, options):
     Returns the positions in seconds.
     """
 
-    return superflux.detect_onsets(odf_rate, odf, options)
+    return [0.]
     return onset_detection.detect_onsets(odf_rate, odf, options)
 
     # we only have a dumb dummy implementation here.

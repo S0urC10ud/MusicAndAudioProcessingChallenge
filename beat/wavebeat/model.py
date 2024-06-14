@@ -1,5 +1,5 @@
-from loss import BCFELoss
-from eval import evaluate, find_beats
+from beat.wavebeat.loss import BCFELoss
+from beat.wavebeat.eval import evaluate, find_beats
 import torch
 from argparse import ArgumentParser
 import os
@@ -16,10 +16,6 @@ def center_crop(x, length: int):
     stop  = start + length
     return x[...,start:stop]
 
-def causal_crop(x, length: int):
-    stop = x.shape[-1] - 1
-    start = stop - length
-    return x[...,start:stop]
 
 class Base(pl.LightningModule):
     """ Base module with train and validation loops from the original repo
@@ -119,7 +115,11 @@ class Base(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         input, target, metadata = batch
         pred = self(input)
-        target_crop = center_crop(target, pred.shape[-1])
+        if pred.shape[-1] > target.shape[-1]:
+            pred = center_crop(pred, target.shape[-1])
+            target_crop = target
+        else:
+            target_crop = center_crop(target, pred.shape[-1])
         loss, _, _ = self.bcfe(pred, target_crop)
         self.log('val_loss', loss)
         pred = torch.sigmoid(pred)

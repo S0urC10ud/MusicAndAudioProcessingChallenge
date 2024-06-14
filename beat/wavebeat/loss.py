@@ -6,7 +6,6 @@ class BCFELoss(torch.nn.Module):
         super(BCFELoss, self).__init__()
 
     def forward(self, input, target):
-        
         # split out the channels
         beat_act_target = target[:,0,:]
         downbeat_act_target = target[:,1,:]
