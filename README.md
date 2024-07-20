@@ -1,11 +1,18 @@
-# Audio-and-Music-Processing Team V
-In this document we provide the necessary info to run the individual implementations.
+# Audio-and-Music-Processing JKU
 
+In this document we provide the necessary info to run the individual implementations for the project we performed in the elective course Audio and Music Processing at JKU by Jan Schlüter. The detector-files show the three sub-tasks with the respective F-Scores on a given test-set:
+- Onset detection: 0.826 (tuned CNN)
+- Beat prediction: 0.638 (multiple agents)
+- Tempo estimation: 0.764 (ODF-Autocorrelation)
+
+For the Onset and Beat detection we managed to win the local competition, whereas in Tempo estimation we noticed that weighting the saliency of the onsets would have given an additional performance boost: just having the best beat/onset detection in general does not yield in the best tempo estimation, factoring in the saliency of the events is crucial as other teams have shown by outperforming our tempo estimation with more coarse approaches.
 
 ### CNN
 For evaluation, the file `detector_cnn.py` can be used with the default `detector.py`-usage. For training, the directory `onsets/cnn` should be examined where `train.py` holds the final (best) hyperparameters. If some additional hyperparameter-tuning has to be done, `train_sweep_final.py` in this directory can be examined. The pre-trained models are `cnn_output_cpu.dmp` and `cnn_output.dmp` in the root directory respectively for cuda.
 
 ### Wavebeat
+This part was heavily inspired by the original implementation https://github.com/csteinmetz1/wavebeat (which perhaps performs even better due to computational restrictions on our end).
+
 Regarding the inference, `detector_wavebeat.py` can be utilized (again with the default usage - for example `python detector_wavebeat.py data/test test_wavbeat_preds.pd`). For the training, the directory `beat/wavbeat` should be examined where pytorch lightning is used for the training loop. 
 
 For training, the first two lines of `model.py` have to be adjusted as follows (but then inference will not work):
